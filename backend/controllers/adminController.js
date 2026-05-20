@@ -6,7 +6,6 @@ const Attendance = require('../models/Attendance');
 const { parseEmployeeExcel }   = require('../utils/excelParser');
 const { generateRandomPassword } = require('../utils/passwordGenerator');
 const { sendWelcomeEmail }     = require('../services/emailService');
-const { sendBirthdayNotification, sendBirthdayWishToEmployee, sendEmail } = require('../services/emailService');
 
 // ── Dashboard ─────────────────────────────────────────
 const getDashboard = async (req, res) => {
@@ -155,33 +154,4 @@ const deleteEmployee = async (req, res) => {
   } catch(err) { return res.status(500).json({ success:false, message:'Server error.' }); }
 };
 
-// Exports moved below after function definitions to avoid TDZ issues
-
-// ── POST /api/admin/employees/:id/birthday-wish ─────────────────────────
-const sendBirthdayEmails = async (req, res) => {
-  try {
-    const employee = await Employee.findById(req.params.id).populate('user','email');
-    if (!employee) return res.status(404).json({ success:false, message:'Employee not found.' });
-
-    const employeeName = `${employee.firstName} ${employee.lastName}`;
-    const employeeEmail = employee.officialEmail || employee.user?.email;
-    if (!employeeEmail) return res.status(400).json({ success:false, message:'Employee has no email.' });
-
-    // Send personal wish to employee and fail if sending does not work.
-    await sendBirthdayWishToEmployee(employeeEmail, employeeName);
-
-    // Notify all employees to wish.
-    const users = await User.find().select('email');
-    const allEmails = users.map((u) => u.email).filter(Boolean);
-    if (allEmails.length > 0) {
-      await sendBirthdayNotification(allEmails, employeeName);
-    }
-
-    return res.status(200).json({ success:true, message:'Birthday emails sent.' });
-  } catch(err) {
-    console.error('sendBirthdayEmails error:', err.message);
-    return res.status(500).json({ success:false, message:'Server error.' });
-  }
-};
-
-module.exports = { getDashboard, addEmployee, bulkUploadEmployees, getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee, sendBirthdayEmails };
+module.exports = { getDashboard, addEmployee, bulkUploadEmployees, getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee };

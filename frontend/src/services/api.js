@@ -48,9 +48,6 @@ export const deleteEmployee = (id)       => API.delete(`/admin/employees/${id}`)
 export const bulkUpload     = (formData) =>
   API.post('/admin/employees/bulk-upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
-// ── Birthday ─────────────────────────────────────────
-export const sendBirthdayWish = (employeeId) => API.post(`/admin/employees/${employeeId}/birthday-wish`);
-
 // ── Projects ─────────────────────────────────────────
 export const getAllProjects          = ()             => API.get('/projects');
 export const getProject             = (id)           => API.get(`/projects/${id}`);

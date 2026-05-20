@@ -1,16 +1,8 @@
 // config/db.js — Mongoose connection to MongoDB
 const mongoose = require("mongoose");
 const connectDB = async () => {
-  const mongoUri = process.env.MONGO_URI;
-  if (!mongoUri) {
-    console.error(
-      "Missing MONGO_URI environment variable. Please create backend/.env from backend/.env.example and set a valid MongoDB connection string.",
-    );
-    process.exit(1);
-  }
-
   try {
-    const conn = await mongoose.connect(mongoUri, {});
+    const conn = await mongoose.connect(process.env.MONGO_URI, {});
     console.log(
       `MongoDB connected: ${conn.connection.host} / ${conn.connection.name}`,
     );

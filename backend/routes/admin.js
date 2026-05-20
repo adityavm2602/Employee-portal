@@ -6,7 +6,7 @@ const { protect }   = require('../middleware/auth');
 const { authorize } = require('../middleware/roleCheck');
 const {
   getDashboard, addEmployee, bulkUploadEmployees,
-  getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee, sendBirthdayEmails,
+  getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee,
 } = require('../controllers/adminController');
 
 const upload = multer({
@@ -27,6 +27,5 @@ router.post('/employees/bulk-upload', upload.single('file'), bulkUploadEmployees
 router.get('/employees/:id',                   getEmployeeById);
 router.put('/employees/:id',                   updateEmployee);
 router.delete('/employees/:id',                deleteEmployee);
-router.post('/employees/:id/birthday-wish',    sendBirthdayEmails);
 
 module.exports = router;
