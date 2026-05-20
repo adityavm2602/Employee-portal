@@ -1,4 +1,4 @@
-// controllers/authController.js — Login, getMe, change password
+// controllers/authController.js — Login, getMe, change password, forgot password
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Employee = require('../models/Employee');
@@ -81,4 +81,36 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { login, getMe, changePassword };
+// ── POST /api/auth/reset-to-employeeid ───────────────────
+// Forgot password: resets password back to Employee ID (no current password needed)
+const resetToEmployeeId = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    if (!employeeId)
+      return res.status(400).json({ success: false, message: 'Employee ID is required.' });
+
+    // Find the employee record by Employee ID
+    const employee = await Employee.findOne({ employeeId: employeeId.trim().toUpperCase() });
+    if (!employee)
+      return res.status(404).json({ success: false, message: 'No employee found with that Employee ID.' });
+
+    // Get the associated user
+    const user = await User.findById(employee.user).select('+password');
+    if (!user)
+      return res.status(404).json({ success: false, message: 'User account not found.' });
+
+    // Reset password to their Employee ID (the system default)
+    user.password = employeeId.trim().toUpperCase();
+    await user.save(); // pre-save hook hashes it
+
+    return res.status(200).json({
+      success: true,
+      message: `Password has been reset to your Employee ID: ${employeeId.trim().toUpperCase()}. Please log in and change it immediately.`,
+    });
+  } catch (err) {
+    console.error('resetToEmployeeId error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+module.exports = { login, getMe, changePassword, resetToEmployeeId };

@@ -54,7 +54,7 @@ const RootRedirect = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
         <Routes>
           {/* Public */}
@@ -69,7 +69,6 @@ export default function App() {
               <Route path="/admin/bulk-upload" element={<BulkUpload />} />
               <Route path="/admin/attendance"  element={<AdminAttendance />} />
               <Route path="/admin/leaves"      element={<AdminLeaves />} />
-              <Route path="/change-password"   element={<ChangePassword />} />
             </Route>
           </Route>
 
@@ -83,7 +82,6 @@ export default function App() {
               <Route path="/techlead/attendance" element={<TechLeadAttendance />} />
               <Route path="/techlead/leaves"     element={<TechLeadLeaves />} />
               <Route path="/techlead/my-leaves"  element={<MyLeaves />} />
-              <Route path="/change-password"     element={<ChangePassword />} />
             </Route>
           </Route>
 
@@ -93,7 +91,6 @@ export default function App() {
               <Route path="/hr/dashboard"  element={<HRDashboard />} />
               <Route path="/hr/leaves"     element={<HRLeaves />} />
               <Route path="/hr/employees"  element={<HREmployees />} />
-              <Route path="/change-password" element={<ChangePassword />} />
             </Route>
           </Route>
 
@@ -106,7 +103,13 @@ export default function App() {
               <Route path="/employee/worklogs"     element={<WorkLogs />} />
               <Route path="/employee/attendance"   element={<Attendance />} />
               <Route path="/employee/leaves"       element={<Leaves />} />
-              <Route path="/change-password"       element={<ChangePassword />} />
+            </Route>
+          </Route>
+
+          {/* ── Change Password — shared by ALL authenticated roles ─ */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/change-password" element={<ChangePassword />} />
             </Route>
           </Route>
 

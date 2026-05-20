@@ -28,6 +28,7 @@ API.interceptors.response.use(
 export const login          = (data) => API.post('/auth/login', data);
 export const getMe          = ()     => API.get('/auth/me');
 export const changePassword = (data) => API.put('/auth/change-password', data);
+export const resetToEmployeeId = (employeeId) => API.post('/auth/reset-to-employeeid', { employeeId });
 
 // ── Admin ────────────────────────────────────────────
 export const getDashboard   = ()         => API.get('/admin/dashboard');
