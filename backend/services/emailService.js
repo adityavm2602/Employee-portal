@@ -2,17 +2,45 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+const requiredSmtpKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
+const missingKeys = requiredSmtpKeys.filter((key) => !process.env[key]);
+if (missingKeys.length > 0) {
+  console.warn(`Missing SMTP environment variables: ${missingKeys.join(', ')}. Emails may fail to send.`);
+}
+
+const smtpHost = process.env.SMTP_HOST;
+if (smtpHost && smtpHost.includes('@')) {
+  console.warn('SMTP_HOST looks like an email address. It should be your SMTP server hostname (for Gmail, smtp.gmail.com).');
+}
+
+const emailFromRaw = process.env.EMAIL_FROM || 'no-reply@example.com';
+const emailFrom = emailFromRaw.includes('<') ? emailFromRaw : `Employee Portal <${emailFromRaw}>`;
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT, 10),
-  secure: false,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  host: smtpHost,
+  port: parseInt(process.env.SMTP_PORT, 10) || 587,
+  secure: process.env.SMTP_PORT === '465',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('SMTP transporter verification failed:', error.message);
+  } else {
+    console.log('SMTP transporter is ready to send messages');
+  }
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Employee Portal" <${process.env.EMAIL_FROM}>`,
+      from: emailFrom,
       to: Array.isArray(to) ? to.join(', ') : to,
       subject,
       html,
@@ -207,6 +235,24 @@ const sendBirthdayNotification = async (techLeadEmails, employeeName) => {
   return sendEmail(techLeadEmails, `🎂 Birthday: ${employeeName}`, html);
 };
 
+// ── Personal birthday wish to employee ────────────────────────────────────
+const sendBirthdayWishToEmployee = async (employeeEmail, employeeName) => {
+  const portalUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:#2563eb;padding:24px;color:#fff;text-align:center;"><h2 style="margin:0;">Happy Birthday, ${employeeName}! 🎉</h2></div>
+      <div style="padding:28px 32px;color:#1e293b;text-align:left;">
+        <p style="font-size:16px;">Dear <strong>${employeeName}</strong>,</p>
+        <p style="color:#475569;font-size:14px;line-height:1.6;">Wishing you a very happy birthday from all of us at the company. We hope you have a wonderful day filled with joy and celebration.</p>
+        <p style="color:#475569;font-size:14px;line-height:1.6;">Thank you for being an important part of our team. Enjoy your day!</p>
+        <p style="margin-top:18px;text-align:center;"><a href="${portalUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;">Visit Portal</a></p>
+      </div>
+      <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 24px;text-align:center;color:#94a3b8;">Automated message from Employee Portal</div>
+    </div>`;
+
+  return sendEmail(employeeEmail, `Happy Birthday ${employeeName} 🎉 — From Company`, html);
+};
+
 // ── Application status ───────────────────────────────────────────────────────
 const sendApplicationStatus = async (employeeEmail, projectTitle, status) => {
   const colors = { accepted: '#16a34a', rejected: '#dc2626', hold: '#d97706' };
@@ -230,5 +276,6 @@ module.exports = {
   sendLeaveStatusToEmployee,
   sendProjectNotification,
   sendBirthdayNotification,
+  sendBirthdayWishToEmployee,
   sendApplicationStatus,
 };
