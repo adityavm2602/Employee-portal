@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -7,130 +6,270 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
 // Auth
-import Login          from './pages/auth/Login';
+import Login from './pages/auth/Login';
 import ChangePassword from './pages/auth/ChangePassword';
 
 // Admin
-import AdminDashboard  from './pages/admin/Dashboard';
-import Employees       from './pages/admin/Employees';
-import BulkUpload      from './pages/admin/BulkUpload';
+import AdminDashboard from './pages/admin/Dashboard';
+import Employees from './pages/admin/Employees';
+import BulkUpload from './pages/admin/BulkUpload';
 import AdminAttendance from './pages/admin/Attendance';
-import AdminLeaves     from './pages/admin/Leaves';
+import AdminLeaves from './pages/admin/Leaves';
 
 // Tech Lead
-import TechLeadDashboard  from './pages/techlead/Dashboard';
-import Projects           from './pages/techlead/Projects';
-import Team               from './pages/techlead/Team';
-import TechLeadWorkLogs   from './pages/techlead/WorkLogs';
+import TechLeadDashboard from './pages/techlead/Dashboard';
+import Projects from './pages/techlead/Projects';
+import Team from './pages/techlead/Team';
+import TechLeadWorkLogs from './pages/techlead/WorkLogs';
 import TechLeadAttendance from './pages/techlead/Attendance';
-import TechLeadLeaves     from './pages/techlead/Leaves';
-import MyLeaves           from './pages/techlead/MyLeaves';
+import TechLeadLeaves from './pages/techlead/Leaves';
+import MyLeaves from './pages/techlead/MyLeaves';
 
 // HR
-import HRDashboard  from './pages/hr/Dashboard';
-import HRLeaves     from './pages/hr/Leaves';
-import HREmployees  from './pages/hr/Employees';
+import HRDashboard from './pages/hr/Dashboard';
+import HRLeaves from './pages/hr/Leaves';
+import HREmployees from './pages/hr/Employees';
 
 // Employee
-import EmployeeDashboard  from './pages/employee/Dashboard';
-import EmployeeProjects   from './pages/employee/Projects';
-import Applications       from './pages/employee/Applications';
-import WorkLogs           from './pages/employee/WorkLogs';
-import Attendance         from './pages/employee/Attendance';
-import Leaves             from './pages/employee/Leaves';
+import EmployeeDashboard from './pages/employee/Dashboard';
+import EmployeeProjects from './pages/employee/Projects';
+import Applications from './pages/employee/Applications';
+import WorkLogs from './pages/employee/WorkLogs';
+import Attendance from './pages/employee/Attendance';
+import Leaves from './pages/employee/Leaves';
 
 const RootRedirect = () => {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  const map = {
-    admin:     '/admin/dashboard',
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const roleRoutes = {
+    admin: '/admin/dashboard',
     tech_lead: '/techlead/dashboard',
-    hr:        '/hr/dashboard',
-    employee:  '/employee/dashboard',
+    hr: '/hr/dashboard',
+    employee: '/employee/dashboard',
   };
-  return <Navigate to={map[user.role] || '/login'} replace />;
+
+  return (
+    <Navigate
+      to={roleRoutes[user.role] || '/login'}
+      replace
+    />
+  );
 };
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/"      element={<RootRedirect />} />
+        <Toaster
+          position="top-right"
+          toastOptions={{ duration: 3500 }}
+        />
 
-          {/* ── Admin ─────────────────────────────── */}
+        <Routes>
+
+          {/* PUBLIC ROUTES */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<RootRedirect />} />
+
+          {/* ───────────────── ADMIN ───────────────── */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route element={<Layout />}>
-              <Route path="/admin/dashboard"   element={<AdminDashboard />} />
-              <Route path="/admin/employees"   element={<Employees />} />
-              <Route path="/admin/bulk-upload" element={<BulkUpload />} />
-              <Route path="/admin/attendance"  element={<AdminAttendance />} />
-              <Route path="/admin/leaves"      element={<AdminLeaves />} />
-              <Route path="/change-password"   element={<ChangePassword />} />
+              <Route
+                path="/admin/dashboard"
+                element={<AdminDashboard />}
+              />
+
+              <Route
+                path="/admin/employees"
+                element={<Employees />}
+              />
+
+              <Route
+                path="/admin/bulk-upload"
+                element={<BulkUpload />}
+              />
+
+              <Route
+                path="/admin/attendance"
+                element={<AdminAttendance />}
+              />
+
+              <Route
+                path="/admin/leaves"
+                element={<AdminLeaves />}
+              />
             </Route>
           </Route>
 
-          {/* ── Tech Lead ─────────────────────────── */}
+          {/* ──────────────── TECH LEAD ─────────────── */}
           <Route element={<ProtectedRoute allowedRoles={['tech_lead']} />}>
             <Route element={<Layout />}>
-              <Route path="/techlead/dashboard"  element={<TechLeadDashboard />} />
-              <Route path="/techlead/projects"   element={<Projects />} />
-              <Route path="/techlead/team"       element={<Team />} />
-              <Route path="/techlead/worklogs"   element={<TechLeadWorkLogs />} />
-              <Route path="/techlead/attendance" element={<TechLeadAttendance />} />
-              <Route path="/techlead/leaves"     element={<TechLeadLeaves />} />
-              <Route path="/techlead/my-leaves"  element={<MyLeaves />} />
-              <Route path="/change-password"     element={<ChangePassword />} />
+              <Route
+                path="/techlead/dashboard"
+                element={<TechLeadDashboard />}
+              />
+
+              <Route
+                path="/techlead/projects"
+                element={<Projects />}
+              />
+
+              <Route
+                path="/techlead/team"
+                element={<Team />}
+              />
+
+              <Route
+                path="/techlead/worklogs"
+                element={<TechLeadWorkLogs />}
+              />
+
+              <Route
+                path="/techlead/attendance"
+                element={<TechLeadAttendance />}
+              />
+
+              <Route
+                path="/techlead/leaves"
+                element={<TechLeadLeaves />}
+              />
+
+              <Route
+                path="/techlead/my-leaves"
+                element={<MyLeaves />}
+              />
             </Route>
           </Route>
 
-          {/* ── HR ────────────────────────────────── */}
+          {/* ───────────────── HR ───────────────── */}
           <Route element={<ProtectedRoute allowedRoles={['hr']} />}>
             <Route element={<Layout />}>
-              <Route path="/hr/dashboard"  element={<HRDashboard />} />
-              <Route path="/hr/leaves"     element={<HRLeaves />} />
-              <Route path="/hr/employees"  element={<HREmployees />} />
-              <Route path="/change-password" element={<ChangePassword />} />
+              <Route
+                path="/hr/dashboard"
+                element={<HRDashboard />}
+              />
+
+              <Route
+                path="/hr/leaves"
+                element={<HRLeaves />}
+              />
+
+              <Route
+                path="/hr/employees"
+                element={<HREmployees />}
+              />
             </Route>
           </Route>
 
-          {/* ── Employee ──────────────────────────── */}
+          {/* ─────────────── EMPLOYEE ─────────────── */}
           <Route element={<ProtectedRoute allowedRoles={['employee']} />}>
             <Route element={<Layout />}>
-              <Route path="/employee/dashboard"    element={<EmployeeDashboard />} />
-              <Route path="/employee/projects"     element={<EmployeeProjects />} />
-              <Route path="/employee/applications" element={<Applications />} />
-              <Route path="/employee/worklogs"     element={<WorkLogs />} />
-              <Route path="/employee/attendance"   element={<Attendance />} />
-              <Route path="/employee/leaves"       element={<Leaves />} />
-              <Route path="/change-password"       element={<ChangePassword />} />
+              <Route
+                path="/employee/dashboard"
+                element={<EmployeeDashboard />}
+              />
+
+              <Route
+                path="/employee/projects"
+                element={<EmployeeProjects />}
+              />
+
+              <Route
+                path="/employee/applications"
+                element={<Applications />}
+              />
+
+              <Route
+                path="/employee/worklogs"
+                element={<WorkLogs />}
+              />
+
+              <Route
+                path="/employee/attendance"
+                element={<Attendance />}
+              />
+
+              <Route
+                path="/employee/leaves"
+                element={<Leaves />}
+              />
             </Route>
           </Route>
 
-          {/* 403 */}
-          <Route path="/unauthorized" element={
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-              <div className="text-center">
-                <p className="text-6xl font-bold text-slate-200 mb-4">403</p>
-                <h1 className="text-xl font-semibold text-slate-700">Access Denied</h1>
-                <a href="/" className="mt-4 inline-block text-blue-600 hover:underline">← Go Home</a>
-              </div>
-            </div>
-          } />
+          {/* ───────── CHANGE PASSWORD FOR ALL ROLES ───────── */}
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  'admin',
+                  'tech_lead',
+                  'hr',
+                  'employee',
+                ]}
+              />
+            }
+          >
+            <Route element={<Layout />}>
+              <Route
+                path="/change-password"
+                element={<ChangePassword />}
+              />
+            </Route>
+          </Route>
 
-          {/* 404 */}
-          <Route path="*" element={
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-              <div className="text-center">
-                <p className="text-6xl font-bold text-slate-200 mb-4">404</p>
-                <h1 className="text-xl font-semibold text-slate-700">Page Not Found</h1>
-                <a href="/" className="mt-4 inline-block text-blue-600 hover:underline">← Go Home</a>
+          {/* 403 PAGE */}
+          <Route
+            path="/unauthorized"
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="text-center">
+                  <p className="text-6xl font-bold text-slate-200 mb-4">
+                    403
+                  </p>
+
+                  <h1 className="text-xl font-semibold text-slate-700">
+                    Access Denied
+                  </h1>
+
+                  <a
+                    href="/"
+                    className="mt-4 inline-block text-blue-600 hover:underline"
+                  >
+                    ← Go Home
+                  </a>
+                </div>
               </div>
-            </div>
-          } />
+            }
+          />
+
+          {/* 404 PAGE */}
+          <Route
+            path="*"
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="text-center">
+                  <p className="text-6xl font-bold text-slate-200 mb-4">
+                    404
+                  </p>
+
+                  <h1 className="text-xl font-semibold text-slate-700">
+                    Page Not Found
+                  </h1>
+
+                  <a
+                    href="/"
+                    className="mt-4 inline-block text-blue-600 hover:underline"
+                  >
+                    ← Go Home
+                  </a>
+                </div>
+              </div>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

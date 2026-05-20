@@ -1,152 +1,493 @@
-// src/pages/auth/ChangePassword.js — Available to ALL roles from sidebar
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { changePassword } from '../../services/api';
-import { Card, CardHeader, CardBody, Button, PageHeader } from '../../components/common/UI';
-import { KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react';
+
+import {
+  Card,
+  CardBody,
+  Button,
+  PageHeader,
+} from '../../components/common/UI';
+
+import {
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
+
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
+/* PASSWORD FIELD */
+const PasswordField = ({
+  label,
+  field,
+  value,
+  placeholder,
+  show,
+  setShow,
+  setForm,
+  setSuccess,
+}) => {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-semibold text-slate-700">
+        {label}
+      </label>
+
+      <div className="relative">
+        <input
+          type={show[field] ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => {
+            setForm((prev) => ({
+              ...prev,
+              [field]: e.target.value,
+            }));
+
+            setSuccess(false);
+          }}
+          placeholder={placeholder}
+          required
+          className="
+            w-full
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            px-4
+            py-3
+            pr-12
+            text-sm
+            shadow-sm
+            transition-all
+            duration-200
+            focus:border-blue-500
+            focus:outline-none
+            focus:ring-4
+            focus:ring-blue-100
+          "
+        />
+
+        <button
+          type="button"
+          onClick={() =>
+            setShow((prev) => ({
+              ...prev,
+              [field]: !prev[field],
+            }))
+          }
+          className="
+            absolute
+            right-4
+            top-1/2
+            -translate-y-1/2
+            text-slate-400
+            hover:text-slate-600
+          "
+        >
+          {show[field] ? (
+            <EyeOff size={18} />
+          ) : (
+            <Eye size={18} />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ChangePassword = () => {
   const { user } = useAuth();
-  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [show, setShow] = useState({ current: false, new: false, confirm: false });
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [show, setShow] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Password strength checker
+  /* PASSWORD STRENGTH */
   const getStrength = (pwd) => {
     let score = 0;
+
     if (pwd.length >= 8) score++;
     if (/[A-Z]/.test(pwd)) score++;
     if (/[0-9]/.test(pwd)) score++;
     if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
     return score;
   };
 
-  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColor = ['', 'bg-red-400', 'bg-amber-400', 'bg-blue-400', 'bg-green-500'];
   const strength = getStrength(form.newPassword);
 
+  const strengthText = [
+    'Very Weak',
+    'Weak',
+    'Medium',
+    'Strong',
+    'Very Strong',
+  ];
+
+  const strengthColors = [
+    'bg-red-500',
+    'bg-orange-400',
+    'bg-yellow-400',
+    'bg-blue-500',
+    'bg-green-500',
+  ];
+
+  /* SUBMIT */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (form.newPassword !== form.confirmPassword) {
-      return toast.error('New passwords do not match.');
-    }
-    if (form.newPassword.length < 6) {
-      return toast.error('Password must be at least 6 characters.');
-    }
-    if (form.newPassword === form.currentPassword) {
-      return toast.error('New password must be different from current password.');
+      return toast.error('Passwords do not match');
     }
 
-    setLoading(true);
+    if (form.newPassword.length < 8) {
+      return toast.error(
+        'Password must be at least 8 characters'
+      );
+    }
+
+    if (form.currentPassword === form.newPassword) {
+      return toast.error(
+        'New password must be different'
+      );
+    }
+
     try {
-      await changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
+      setLoading(true);
+
+      await changePassword({
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
+      });
+
+      toast.success('Password updated successfully');
+
+      if (user?.id) {
+        localStorage.setItem(
+          `pwd_changed_${user.id}`,
+          'true'
+        );
+      }
+
       setSuccess(true);
-      setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      // Mark that this user has changed their default password (hides the dashboard banner)
-      if (user?.id) localStorage.setItem(`pwd_changed_${user.id}`, 'true');
-      toast.success('Password changed successfully!');
+
+      setForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+
+      /* REDIRECT TO DASHBOARD */
+      setTimeout(() => {
+
+        const roleRoutes = {
+          admin: '/admin/dashboard',
+          tech_lead: '/techlead/dashboard',
+          hr: '/hr/dashboard',
+          employee: '/employee/dashboard',
+        };
+
+        navigate(roleRoutes[user?.role] || '/');
+
+      }, 1500);
+
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to change password.');
+      toast.error(
+        err.response?.data?.message ||
+          'Failed to update password'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const PasswordInput = ({ label, field, value }) => (
-    <div className="space-y-1">
-      <label className="block text-sm font-medium text-slate-700">{label}</label>
-      <div className="relative">
-        <input
-          type={show[field] ? 'text' : 'password'}
-          value={value}
-          onChange={e => { setForm({ ...form, [field === 'current' ? 'currentPassword' : field === 'new' ? 'newPassword' : 'confirmPassword']: e.target.value }); setSuccess(false); }}
-          placeholder={`Enter ${label.toLowerCase()}`}
-          required
-          className="w-full px-4 py-2.5 pr-11 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <button type="button" onClick={() => setShow(s => ({ ...s, [field]: !s[field] }))}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-          {show[field] ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="max-w-lg">
-      <PageHeader title="Change Password" subtitle="Update your account password" />
+    <div className="max-w-2xl mx-auto py-6">
+      <PageHeader
+        title="Security Settings"
+        subtitle="Change your account password securely"
+      />
 
-      <Card>
-        <CardHeader
-          title="Set New Password"
-          subtitle="Your temporary password is your Employee ID — please change it now"
-        />
-        <CardBody>
+      <Card className="overflow-hidden border-0 shadow-2xl rounded-3xl">
+
+        {/* TOP HEADER */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-4 rounded-2xl">
+              <ShieldCheck size={34} />
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold">
+                Password & Security
+              </h2>
+
+              <p className="text-blue-100 mt-1 text-sm">
+                Keep your account secure with a strong password
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <CardBody className="p-8">
+
+          {/* SUCCESS MESSAGE */}
           {success && (
-            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg mb-5">
-              <CheckCircle className="text-green-600 shrink-0" size={20} />
+            <div className="
+              mb-6
+              flex
+              items-start
+              gap-3
+              rounded-2xl
+              border
+              border-green-200
+              bg-green-50
+              p-4
+            ">
+              <CheckCircle2
+                className="text-green-600 mt-0.5"
+                size={22}
+              />
+
               <div>
-                <p className="font-semibold text-green-800 text-sm">Password updated successfully!</p>
-                <p className="text-green-600 text-xs mt-0.5">Use your new password on your next login.</p>
+                <h4 className="font-semibold text-green-800">
+                  Password Updated Successfully
+                </h4>
+
+                <p className="text-sm text-green-600 mt-1">
+                  Redirecting to dashboard...
+                </p>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <PasswordInput label="Current Password" field="current" value={form.currentPassword} />
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
 
-            <div className="border-t border-slate-100 pt-5 space-y-4">
-              <PasswordInput label="New Password" field="new" value={form.newPassword} />
+            {/* CURRENT PASSWORD */}
+            <PasswordField
+              label="Current Password"
+              field="currentPassword"
+              value={form.currentPassword}
+              placeholder="Enter current password"
+              show={show}
+              setShow={setShow}
+              setForm={setForm}
+              setSuccess={setSuccess}
+            />
 
-              {/* Strength meter */}
-              {form.newPassword && (
-                <div className="space-y-1.5">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= strength ? strengthColor[strength] : 'bg-slate-200'}`} />
-                    ))}
-                  </div>
-                  <p className={`text-xs font-medium ${
-                    strength <= 1 ? 'text-red-500' : strength === 2 ? 'text-amber-500' : strength === 3 ? 'text-blue-500' : 'text-green-600'
-                  }`}>
-                    {strengthLabel[strength]} password
-                  </p>
+            {/* NEW PASSWORD */}
+            <PasswordField
+              label="New Password"
+              field="newPassword"
+              value={form.newPassword}
+              placeholder="Create a strong password"
+              show={show}
+              setShow={setShow}
+              setForm={setForm}
+              setSuccess={setSuccess}
+            />
+
+            {/* PASSWORD STRENGTH */}
+            {form.newPassword && (
+              <div className="space-y-3">
+
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={`
+                        h-2
+                        flex-1
+                        rounded-full
+                        transition-all
+                        duration-300
+                        ${
+                          i <= strength
+                            ? strengthColors[strength]
+                            : 'bg-slate-200'
+                        }
+                      `}
+                    />
+                  ))}
                 </div>
-              )}
 
-              <PasswordInput label="Confirm New Password" field="confirm" value={form.confirmPassword} />
+                <div className="flex justify-between">
+                  <p className="text-sm text-slate-600">
+                    Password Strength
+                  </p>
 
-              {/* Match indicator */}
-              {form.confirmPassword && (
-                <p className={`text-xs font-medium ${form.newPassword === form.confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
-                  {form.newPassword === form.confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
-                </p>
-              )}
-            </div>
+                  <span className="font-semibold text-sm">
+                    {strengthText[strength]}
+                  </span>
+                </div>
+              </div>
+            )}
 
-            {/* Requirements */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <p className="text-xs font-semibold text-slate-500 mb-2">Password requirements:</p>
-              <ul className="space-y-1">
+            {/* CONFIRM PASSWORD */}
+            <PasswordField
+              label="Confirm Password"
+              field="confirmPassword"
+              value={form.confirmPassword}
+              placeholder="Confirm new password"
+              show={show}
+              setShow={setShow}
+              setForm={setForm}
+              setSuccess={setSuccess}
+            />
+
+            {/* PASSWORD MATCH */}
+            {form.confirmPassword && (
+              <div
+                className={`
+                  flex items-center gap-2 text-sm font-medium
+                  ${
+                    form.newPassword === form.confirmPassword
+                      ? 'text-green-600'
+                      : 'text-red-500'
+                  }
+                `}
+              >
+                {form.newPassword === form.confirmPassword ? (
+                  <CheckCircle2 size={16} />
+                ) : (
+                  <AlertCircle size={16} />
+                )}
+
+                {form.newPassword === form.confirmPassword
+                  ? 'Passwords match'
+                  : 'Passwords do not match'}
+              </div>
+            )}
+
+            {/* REQUIREMENTS */}
+            <div className="
+              rounded-2xl
+              border
+              border-slate-200
+              bg-slate-50
+              p-5
+            ">
+              <div className="flex items-center gap-2 mb-4">
+                <LockKeyhole
+                  size={18}
+                  className="text-blue-600"
+                />
+
+                <h4 className="font-semibold text-slate-700">
+                  Password Requirements
+                </h4>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+
                 {[
-                  [form.newPassword.length >= 8, 'At least 8 characters'],
-                  [/[A-Z]/.test(form.newPassword), 'One uppercase letter'],
-                  [/[0-9]/.test(form.newPassword), 'One number'],
-                  [/[^A-Za-z0-9]/.test(form.newPassword), 'One special character'],
+                  [
+                    form.newPassword.length >= 8,
+                    'Minimum 8 characters',
+                  ],
+                  [
+                    /[A-Z]/.test(form.newPassword),
+                    'One uppercase letter',
+                  ],
+                  [
+                    /[0-9]/.test(form.newPassword),
+                    'One number',
+                  ],
+                  [
+                    /[^A-Za-z0-9]/.test(form.newPassword),
+                    'One special character',
+                  ],
                 ].map(([met, text]) => (
-                  <li key={text} className={`text-xs flex items-center gap-2 ${met ? 'text-green-600' : 'text-slate-400'}`}>
-                    <span>{met ? '✓' : '○'}</span> {text}
-                  </li>
+                  <div
+                    key={text}
+                    className={`
+                      flex items-center gap-2 text-sm
+                      ${
+                        met
+                          ? 'text-green-600'
+                          : 'text-slate-500'
+                      }
+                    `}
+                  >
+                    <span>
+                      {met ? '✓' : '○'}
+                    </span>
+
+                    {text}
+                  </div>
                 ))}
-              </ul>
+
+              </div>
             </div>
 
-            <Button type="submit" loading={loading} className="w-full" size="lg">
-              <KeyRound size={16} /> Update Password
-            </Button>
+            {/* BUTTONS */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+
+              <Button
+                type="submit"
+                loading={loading}
+                className="
+                  flex-1
+                  rounded-xl
+                  py-3
+                  text-sm
+                  font-semibold
+                  shadow-lg
+                "
+                size="lg"
+              >
+                {loading
+                  ? 'Updating Password...'
+                  : 'Update Password'}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: '',
+                  })
+                }
+                className="
+                  flex-1
+                  rounded-xl
+                  border
+                  border-slate-300
+                  bg-white
+                  px-5
+                  py-3
+                  font-semibold
+                  hover:bg-slate-50
+                  transition-all
+                "
+              >
+                Reset Form
+              </button>
+
+            </div>
+
           </form>
         </CardBody>
       </Card>
