@@ -1,3 +1,15 @@
+// ── GET /api/worklogs/all (admin) ──────────────────
+const getAllWorkLogs = async (req, res) => {
+  try {
+    const logs = await WorkLog.find()
+      .populate('employee', 'firstName lastName employeeId')
+      .populate('project', 'title')
+      .sort({ logDate: -1 });
+    return res.status(200).json({ success: true, logs });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
 // controllers/worklogController.js — Work log CRUD
 const WorkLog = require('../models/WorkLog');
 const Employee = require('../models/Employee');
@@ -73,4 +85,4 @@ const getEmployeeWorkLogs = async (req, res) => {
   }
 };
 
-module.exports = { createWorkLog, getMyWorkLogs, getTeamWorkLogs, getEmployeeWorkLogs };
+module.exports = { createWorkLog, getMyWorkLogs, getTeamWorkLogs, getEmployeeWorkLogs, getAllWorkLogs };

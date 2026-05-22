@@ -7,6 +7,7 @@ const { authorize } = require('../middleware/roleCheck');
 const {
   getDashboard, addEmployee, bulkUploadEmployees,
   getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee,
+  getDailyWorkSummary,
 } = require('../controllers/adminController');
 
 const upload = multer({
@@ -21,6 +22,7 @@ const upload = multer({
 router.use(protect, authorize('admin'));
 
 router.get('/dashboard',                       getDashboard);
+router.get('/daily-work-summary',              getDailyWorkSummary);
 router.get('/employees',                       getAllEmployees);
 router.post('/employees',                      addEmployee);
 router.post('/employees/bulk-upload', upload.single('file'), bulkUploadEmployees);

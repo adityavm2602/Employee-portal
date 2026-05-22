@@ -15,6 +15,7 @@ import Employees from './pages/admin/Employees';
 import BulkUpload from './pages/admin/BulkUpload';
 import AdminAttendance from './pages/admin/Attendance';
 import AdminLeaves from './pages/admin/Leaves';
+import AdminWorkLogs from './pages/admin/WorkLogs';
 
 // Tech Lead
 import TechLeadDashboard from './pages/techlead/Dashboard';
@@ -101,6 +102,10 @@ export default function App() {
               <Route
                 path="/admin/leaves"
                 element={<AdminLeaves />}
+              />
+              <Route
+                path="/admin/worklogs"
+                element={<AdminWorkLogs />}
               />
             </Route>
           </Route>
