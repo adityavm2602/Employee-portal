@@ -68,6 +68,7 @@ export const getMyApplications = ()          => API.get('/employee/applications'
 export const createWorkLog   = (data) => API.post('/worklogs', data);
 export const getMyWorkLogs   = ()     => API.get('/worklogs/my');
 export const getTeamWorkLogs = ()     => API.get('/worklogs/team');
+export const getAllWorkLogs  = ()     => API.get('/worklogs/all');
 
 // ── Attendance ───────────────────────────────────────
 export const markAttendance    = (status) => API.post('/attendance/mark', { status });

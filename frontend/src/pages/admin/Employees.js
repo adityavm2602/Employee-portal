@@ -20,6 +20,8 @@ const Employees = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
+  const [department, setDepartment] = useState('all');
+  const [project, setProject] = useState('all');
 
   const fetchEmployees = async () => {
     try {
@@ -79,7 +81,15 @@ const Employees = () => {
     } catch { toast.error('Failed to delete employee'); }
   };
 
-  const filtered = employees.filter(e =>
+
+  // Get unique departments and projects for filters
+  const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)));
+  const projects = Array.from(new Set(employees.map(e => e.currentProject?.title).filter(Boolean)));
+
+  let filtered = employees;
+  if (department !== 'all') filtered = filtered.filter(e => e.department === department);
+  if (project !== 'all') filtered = filtered.filter(e => e.currentProject?.title === project);
+  filtered = filtered.filter(e =>
     `${e.firstName} ${e.lastName} ${e.employeeId} ${e.officialEmail}`
       .toLowerCase().includes(search.toLowerCase())
   );
@@ -98,9 +108,25 @@ const Employees = () => {
         <CardHeader
           title="All Employees"
           action={
-            <input placeholder="Search employees..." value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-60" />
+            <div className="flex gap-2 items-center">
+              <select value={department} onChange={e => setDepartment(e.target.value)}
+                className="px-2 py-1 border border-slate-300 rounded-lg text-sm">
+                <option value="all">All Departments</option>
+                {departments.map(dep => (
+                  <option key={dep} value={dep}>{dep}</option>
+                ))}
+              </select>
+              <select value={project} onChange={e => setProject(e.target.value)}
+                className="px-2 py-1 border border-slate-300 rounded-lg text-sm">
+                <option value="all">All Projects</option>
+                {projects.map(proj => (
+                  <option key={proj} value={proj}>{proj}</option>
+                ))}
+              </select>
+              <input placeholder="Search employees..." value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-60" />
+            </div>
           }
         />
         <CardBody className="p-0">
