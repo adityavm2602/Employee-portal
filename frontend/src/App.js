@@ -1,42 +1,74 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import Layout from './components/layout/Layout';
+import React from "react";
 
-// Auth
-import Login from './pages/auth/Login';
-import ChangePassword from './pages/auth/ChangePassword';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-// Admin
-import AdminDashboard from './pages/admin/Dashboard';
-import Employees from './pages/admin/Employees';
-import BulkUpload from './pages/admin/BulkUpload';
-import AdminAttendance from './pages/admin/Attendance';
-import AdminLeaves from './pages/admin/Leaves';
+import { Toaster } from "react-hot-toast";
 
-// Tech Lead
-import TechLeadDashboard from './pages/techlead/Dashboard';
-import Projects from './pages/techlead/Projects';
-import Team from './pages/techlead/Team';
-import TechLeadWorkLogs from './pages/techlead/WorkLogs';
-import TechLeadAttendance from './pages/techlead/Attendance';
-import TechLeadLeaves from './pages/techlead/Leaves';
-import MyLeaves from './pages/techlead/MyLeaves';
+import {
+  AuthProvider,
+  useAuth,
+} from "./context/AuthContext";
 
+import ProtectedRoute from "./components/common/ProtectedRoute";
+
+import Layout from "./components/layout/Layout";
+
+// =======================================
+// AUTH
+// =======================================
+
+import Login from "./pages/auth/Login";
+import ChangePassword from "./pages/auth/ChangePassword";
+
+// =======================================
+// ADMIN
+// =======================================
+
+import AdminDashboard from "./pages/admin/Dashboard";
+import Employees from "./pages/admin/Employees";
+import BulkUpload from "./pages/admin/BulkUpload";
+import AdminAttendance from "./pages/admin/Attendance";
+import AdminLeaves from "./pages/admin/Leaves";
+
+// =======================================
+// TECH LEAD
+// =======================================
+
+import TechLeadDashboard from "./pages/techlead/Dashboard";
+import Projects from "./pages/techlead/Projects";
+import Team from "./pages/techlead/Team";
+import TechLeadWorkLogs from "./pages/techlead/WorkLogs";
+import TechLeadAttendance from "./pages/techlead/Attendance";
+import TechLeadLeaves from "./pages/techlead/Leaves";
+import MyLeaves from "./pages/techlead/MyLeaves";
+
+// =======================================
 // HR
-import HRDashboard from './pages/hr/Dashboard';
-import HRLeaves from './pages/hr/Leaves';
-import HREmployees from './pages/hr/Employees';
+// =======================================
 
-// Employee
-import EmployeeDashboard from './pages/employee/Dashboard';
-import EmployeeProjects from './pages/employee/Projects';
-import Applications from './pages/employee/Applications';
-import WorkLogs from './pages/employee/WorkLogs';
-import Attendance from './pages/employee/Attendance';
-import Leaves from './pages/employee/Leaves';
+import HRDashboard from "./pages/hr/Dashboard";
+import HRLeaves from "./pages/hr/Leaves";
+import HREmployees from "./pages/hr/Employees";
+
+// =======================================
+// EMPLOYEE
+// =======================================
+
+import EmployeeDashboard from "./pages/employee/Dashboard";
+import EmployeeProjects from "./pages/employee/Projects";
+import Applications from "./pages/employee/Applications";
+import WorkLogs from "./pages/employee/WorkLogs";
+import Attendance from "./pages/employee/Attendance";
+import Leaves from "./pages/employee/Leaves";
+
+// =======================================
+// ROOT REDIRECT
+// =======================================
 
 const RootRedirect = () => {
   const { user } = useAuth();
@@ -46,38 +78,66 @@ const RootRedirect = () => {
   }
 
   const roleRoutes = {
-    admin: '/admin/dashboard',
-    tech_lead: '/techlead/dashboard',
-    hr: '/hr/dashboard',
-    employee: '/employee/dashboard',
+    admin: "/admin/dashboard",
+    tech_lead: "/techlead/dashboard",
+    hr: "/hr/dashboard",
+    employee: "/employee/dashboard",
   };
 
   return (
     <Navigate
-      to={roleRoutes[user.role] || '/login'}
+      to={roleRoutes[user.role] || "/login"}
       replace
     />
   );
 };
 
+// =======================================
+// APP
+// =======================================
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+
+        {/* TOASTER */}
         <Toaster
           position="top-right"
-          toastOptions={{ duration: 3500 }}
+          toastOptions={{
+            duration: 3000,
+          }}
         />
 
         <Routes>
 
-          {/* PUBLIC ROUTES */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<RootRedirect />} />
+          {/* =======================================
+              PUBLIC ROUTES
+          ======================================= */}
 
-          {/* ───────────────── ADMIN ───────────────── */}
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          <Route
+            path="/"
+            element={<RootRedirect />}
+          />
+
+          {/* =======================================
+              ADMIN ROUTES
+          ======================================= */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin"]}
+              />
+            }
+          >
             <Route element={<Layout />}>
+
               <Route
                 path="/admin/dashboard"
                 element={<AdminDashboard />}
@@ -102,12 +162,33 @@ export default function App() {
                 path="/admin/leaves"
                 element={<AdminLeaves />}
               />
+
             </Route>
           </Route>
 
-          {/* ──────────────── TECH LEAD ─────────────── */}
-          <Route element={<ProtectedRoute allowedRoles={['tech_lead']} />}>
+          {/* =======================================
+              TECH LEAD ROUTES
+          ======================================= */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["tech_lead"]}
+              />
+            }
+          >
             <Route element={<Layout />}>
+
+              <Route
+                path="/techlead"
+                element={
+                  <Navigate
+                    to="/techlead/dashboard"
+                    replace
+                  />
+                }
+              />
+
               <Route
                 path="/techlead/dashboard"
                 element={<TechLeadDashboard />}
@@ -142,12 +223,23 @@ export default function App() {
                 path="/techlead/my-leaves"
                 element={<MyLeaves />}
               />
+
             </Route>
           </Route>
 
-          {/* ───────────────── HR ───────────────── */}
-          <Route element={<ProtectedRoute allowedRoles={['hr']} />}>
+          {/* =======================================
+              HR ROUTES
+          ======================================= */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["hr"]}
+              />
+            }
+          >
             <Route element={<Layout />}>
+
               <Route
                 path="/hr/dashboard"
                 element={<HRDashboard />}
@@ -162,12 +254,23 @@ export default function App() {
                 path="/hr/employees"
                 element={<HREmployees />}
               />
+
             </Route>
           </Route>
 
-          {/* ─────────────── EMPLOYEE ─────────────── */}
-          <Route element={<ProtectedRoute allowedRoles={['employee']} />}>
+          {/* =======================================
+              EMPLOYEE ROUTES
+          ======================================= */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["employee"]}
+              />
+            }
+          >
             <Route element={<Layout />}>
+
               <Route
                 path="/employee/dashboard"
                 element={<EmployeeDashboard />}
@@ -197,36 +300,46 @@ export default function App() {
                 path="/employee/leaves"
                 element={<Leaves />}
               />
+
             </Route>
           </Route>
 
-          {/* ───────── CHANGE PASSWORD FOR ALL ROLES ───────── */}
+          {/* =======================================
+              CHANGE PASSWORD
+          ======================================= */}
+
           <Route
             element={
               <ProtectedRoute
                 allowedRoles={[
-                  'admin',
-                  'tech_lead',
-                  'hr',
-                  'employee',
+                  "admin",
+                  "tech_lead",
+                  "hr",
+                  "employee",
                 ]}
               />
             }
           >
             <Route element={<Layout />}>
+
               <Route
                 path="/change-password"
                 element={<ChangePassword />}
               />
+
             </Route>
           </Route>
 
-          {/* 403 PAGE */}
+          {/* =======================================
+              UNAUTHORIZED PAGE
+          ======================================= */}
+
           <Route
             path="/unauthorized"
             element={
               <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">
+
                   <p className="text-6xl font-bold text-slate-200 mb-4">
                     403
                   </p>
@@ -241,17 +354,22 @@ export default function App() {
                   >
                     ← Go Home
                   </a>
+
                 </div>
               </div>
             }
           />
 
-          {/* 404 PAGE */}
+          {/* =======================================
+              404 PAGE
+          ======================================= */}
+
           <Route
             path="*"
             element={
               <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">
+
                   <p className="text-6xl font-bold text-slate-200 mb-4">
                     404
                   </p>
@@ -266,10 +384,12 @@ export default function App() {
                   >
                     ← Go Home
                   </a>
+
                 </div>
               </div>
             }
           />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
