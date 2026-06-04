@@ -17,6 +17,10 @@ const employeeRoutes = require("./routes/employee");
 const worklogRoutes = require("./routes/worklogs");
 const attendanceRoutes = require("./routes/attendance");
 const leaveRoutes = require("./routes/leaves");
+const dailyUpdateRoutes = require("./routes/dailyUpdates");
+const worklogSingularRoutes = require("./routes/worklog");
+const profileRoutes = require("./routes/profile");
+const notificationRoutes = require("./routes/notifications");
 
 // NEW TECH LEAD ROUTES
 const techLeadRoutes = require("./routes/techLeadRoutes");
@@ -34,6 +38,48 @@ const { startBirthdayCron } = require("./cron/birthdayCron");
 connectDB();
 
 const app = express();
+ Employee-dashboard
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+// Create HTTP server for socket.io integration
+const http = require("http");
+const { Server } = require("socket.io");
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+// Set socketio instance on express app so controllers can access it
+app.set("socketio", io);
+
+// Handle socket.io connections
+io.on("connection", (socket) => {
+  console.log(`Socket client connected: ${socket.id}`);
+
+  socket.on("join", (userId) => {
+    if (userId) {
+      socket.join(userId.toString());
+      console.log(`Socket client ${socket.id} joined user room: ${userId}`);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Socket client disconnected: ${socket.id}`);
+  });
+});
+
+// ── Middleware ────────────────────────────────────────
+app.use(
+  cors({
+    origin: allowedOrigins,
 
 // =======================================
 // MIDDLEWARE
@@ -45,6 +91,7 @@ app.use(
       process.env.CLIENT_URL ||
       "http://localhost:3000",
 
+ main
     credentials: true,
   })
 );
@@ -82,6 +129,10 @@ app.use("/api/worklogs", worklogRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
 app.use("/api/leaves", leaveRoutes);
+app.use("/api/daily-updates", dailyUpdateRoutes);
+app.use("/api/worklog", worklogSingularRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // =======================================
 // TECH LEAD ROUTES
@@ -132,6 +183,14 @@ app.use((err, req, res, next) => {
 // =======================================
 
 const PORT = process.env.PORT || 5000;
+ Employee-dashboard
+server.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  startBirthdayCron();
+});
+
+module.exports = server;
+
 
 app.listen(PORT, () => {
   console.log(
@@ -142,3 +201,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+ main

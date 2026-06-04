@@ -41,7 +41,7 @@ const HREmployees = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
-                    {['Name','Employee ID','Email','Contact','Status','Role','Project'].map(h => (
+                    {['Name','Employee ID','Email & Phone','Dept & Desig','Status','Role','Project'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">{h}</th>
                     ))}
                   </tr>
@@ -58,8 +58,14 @@ const HREmployees = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-slate-500">{emp.employeeId}</td>
-                      <td className="px-4 py-3 text-slate-500">{emp.officialEmail}</td>
-                      <td className="px-4 py-3 text-slate-500">{emp.contactNumber}</td>
+                      <td className="px-4 py-3 text-slate-500">
+                        <div>{emp.officialEmail}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">{emp.contactNumber}</div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        <div className="font-medium text-slate-700">{emp.designation || '—'}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">{emp.department || '—'}</div>
+                      </td>
                       <td className="px-4 py-3"><Badge status={emp.status} /></td>
                       <td className="px-4 py-3">
                         <Badge status={emp.user?.role === 'tech_lead' ? 'active' : emp.user?.role === 'hr' ? 'hold' : 'pending'}

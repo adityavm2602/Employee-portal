@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
@@ -15,9 +16,14 @@ import AdminDashboard from './pages/admin/Dashboard';
 import Employees from './pages/admin/Employees';
 import BulkUpload from './pages/admin/BulkUpload';
 import AdminAttendance from './pages/admin/Attendance';
+ Employee-dashboard
+import AdminLeaves     from './pages/admin/Leaves';
+import AdminWorkReports from './pages/admin/WorkReports';
+
 import AdminLeaves from './pages/admin/Leaves';
 import TechLeadUpdates from './pages/admin/TechLeadUpdates';
 import AdminWorkLogs from './pages/admin/WorkLogs';
+ main
 
 // Tech Lead
 import TechLeadDashboard from './pages/techlead/Dashboard';
@@ -79,6 +85,22 @@ import MyLeaves from "./pages/techlead/MyLeaves";
 
 // =======================================
 // HR
+ Employee-dashboard
+import HRDashboard  from './pages/hr/Dashboard';
+import HRLeaves     from './pages/hr/Leaves';
+import HREmployees  from './pages/hr/Employees';
+
+// Employee
+import EmployeeDashboard  from './pages/employee/Dashboard';
+import EmployeeProjects   from './pages/employee/Projects';
+import Applications       from './pages/employee/Applications';
+import WorkLogs           from './pages/employee/WorkLogs';
+import Attendance         from './pages/employee/Attendance';
+import Leaves             from './pages/employee/Leaves';
+import DailyUpdates       from './pages/employee/DailyUpdates';
+import Profile            from './pages/employee/Profile';
+import Notifications      from './pages/employee/Notifications';
+
 // =======================================
 
 import HRDashboard from "./pages/hr/Dashboard";
@@ -99,6 +121,7 @@ import Leaves from "./pages/employee/Leaves";
 // =======================================
 // ROOT REDIRECT
 // =======================================
+ main
 
 const RootRedirect = () => {
   const { user } = useAuth();
@@ -129,6 +152,11 @@ const RootRedirect = () => {
 export default function App() {
   return (
     <AuthProvider>
+ Employee-dashboard
+      <SocketProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+
       <BrowserRouter>
 
         {/* TOASTER */}
@@ -139,6 +167,7 @@ export default function App() {
           }}
         />
 
+ main
         <Routes>
 
           {/* =======================================
@@ -220,6 +249,15 @@ export default function App() {
             }
           >
             <Route element={<Layout />}>
+ Employee-dashboard
+              <Route path="/admin/dashboard"   element={<AdminDashboard />} />
+              <Route path="/admin/employees"   element={<Employees />} />
+              <Route path="/admin/bulk-upload" element={<BulkUpload />} />
+              <Route path="/admin/attendance"  element={<AdminAttendance />} />
+              <Route path="/admin/leaves"      element={<AdminLeaves />} />
+              <Route path="/admin/daily-updates" element={<AdminWorkReports />} />
+              <Route path="/admin/time-tracking" element={<AdminWorkReports />} />
+
 
               <Route
                 path="/techlead"
@@ -266,6 +304,7 @@ export default function App() {
                 element={<MyLeaves />}
               />
 
+ main
             </Route>
           </Route>
 
@@ -281,6 +320,15 @@ export default function App() {
             }
           >
             <Route element={<Layout />}>
+ Employee-dashboard
+              <Route path="/techlead/dashboard"  element={<TechLeadDashboard />} />
+              <Route path="/techlead/projects"   element={<Projects />} />
+              <Route path="/techlead/team"       element={<Team />} />
+              <Route path="/techlead/worklogs"   element={<TechLeadWorkLogs />} />
+              <Route path="/techlead/attendance" element={<TechLeadAttendance />} />
+              <Route path="/techlead/leaves"     element={<TechLeadLeaves />} />
+              <Route path="/techlead/my-leaves"  element={<MyLeaves />} />
+
 
               <Route
                 path="/hr/dashboard"
@@ -297,6 +345,7 @@ export default function App() {
                 element={<HREmployees />}
               />
 
+ main
             </Route>
           </Route>
 
@@ -312,6 +361,11 @@ export default function App() {
             }
           >
             <Route element={<Layout />}>
+ Employee-dashboard
+              <Route path="/hr/dashboard"  element={<HRDashboard />} />
+              <Route path="/hr/leaves"     element={<HRLeaves />} />
+              <Route path="/hr/employees"  element={<HREmployees />} />
+
 
               <Route
                 path="/employee/dashboard"
@@ -343,6 +397,7 @@ export default function App() {
                 element={<Leaves />}
               />
 
+ main
             </Route>
           </Route>
 
@@ -363,12 +418,38 @@ export default function App() {
             }
           >
             <Route element={<Layout />}>
+ Employee-dashboard
+              <Route path="/employee/dashboard"    element={<EmployeeDashboard />} />
+              <Route path="/employee/projects"     element={<EmployeeProjects />} />
+              <Route path="/employee/applications" element={<Applications />} />
+              <Route path="/employee/worklogs"     element={<WorkLogs />} />
+              <Route path="/employee/attendance"   element={<Attendance />} />
+              <Route path="/employee/leaves"       element={<Leaves />} />
+            </Route>
+          </Route>
+
+          {/* ── Shared (Admin & Employee) Daily Updates ──── */}
+          <Route element={<ProtectedRoute allowedRoles={['employee', 'admin']} />}>
+            <Route element={<Layout />}>
+              <Route path="/daily-updates"         element={<DailyUpdates />} />
+              <Route path="/time-tracking"         element={<DailyUpdates />} />
+            </Route>
+          </Route>
+
+          {/* ── Change Password & Profile & Notifications — shared by ALL authenticated roles ─ */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/profile"         element={<Profile />} />
+              <Route path="/notifications"   element={<Notifications />} />
+
 
               <Route
                 path="/change-password"
                 element={<ChangePassword />}
               />
 
+ main
             </Route>
           </Route>
 
@@ -433,7 +514,8 @@ export default function App() {
           />
 
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }

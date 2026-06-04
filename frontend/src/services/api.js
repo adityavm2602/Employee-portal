@@ -38,6 +38,7 @@ API.interceptors.response.use(
 export const login          = (data) => API.post('/auth/login', data);
 export const getMe          = ()     => API.get('/auth/me');
 export const changePassword = (data) => API.put('/auth/change-password', data);
+export const resetToEmployeeId = (employeeId) => API.post('/auth/reset-to-employeeid', { employeeId });
 
 // ── Admin ────────────────────────────────────────────
 export const getDashboard   = ()         => API.get('/admin/dashboard');
@@ -59,10 +60,37 @@ export const updateApplicationStatus= (pId,aId,status) =>
   API.patch(`/projects/${pId}/applications/${aId}`, { status });
 export const getMyTeam              = ()             => API.get('/projects/my-team');
 
+// ── Profile Management ────────────────────────────────
+export const getProfile           = ()          => API.get('/profile');
+export const updateProfile        = (data)      => API.put('/profile/update', data);
+export const uploadProfileImage   = (formData)  => API.post('/profile/upload-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const changeProfilePassword = (data)     => API.put('/profile/change-password', data);
+
+// ── Notifications ─────────────────────────────────────
+export const sendNotification     = (data)      => API.post('/notifications/send', data);
+export const getNotifications     = (params)    => API.get('/notifications', { params });
+export const markNotificationRead = (id)        => API.put(`/notifications/read/${id}`);
+export const deleteNotification   = (id)        => API.delete(`/notifications/${id}`);
+export const getUnreadCount       = ()          => API.get('/notifications/unread-count');
+
 // ── Employee ─────────────────────────────────────────
-export const getProfile        = ()          => API.get('/employee/profile');
 export const applyForProject   = (projectId) => API.post(`/employee/apply/${projectId}`);
 export const getMyApplications = ()          => API.get('/employee/applications');
+export const getEmployeeList   = ()          => API.get('/employee/list');
+
+// ── Daily Updates ────────────────────────────────────
+export const createDailyUpdate   = (data)     => API.post('/daily-updates', data);
+export const getTodayDailyUpdate = ()         => API.get('/daily-updates/today');
+export const getDailyUpdateHistory = (params) => API.get('/daily-updates/history', { params });
+export const updateDailyUpdate   = (id, data) => API.put(`/daily-updates/${id}`, data);
+
+// ── Smart Daily Work Logs & Time Tracking ──────────────
+export const createDailyWorkLog       = ()         => API.post('/worklog/create');
+export const getTodayDailyWorkLog     = ()         => API.get('/worklog/today');
+export const getDailyWorkLogHistory   = (params)   => API.get('/worklog/history', { params });
+export const updateDailyWorkLog       = (id, data) => API.put(`/worklog/update/${id}`, data);
+export const getEmployeeWorkLogReport = ()         => API.get('/worklog/report');
+export const getAdminWorklogAnalytics = ()         => API.get('/admin/worklog/analytics');
 
 // ── Work Logs ────────────────────────────────────────
 export const createWorkLog   = (data) => API.post('/worklogs', data);
@@ -78,6 +106,7 @@ export const getAllAttendance   = (date)   =>
 
 // ── Leaves ───────────────────────────────────────────
 export const applyLeave    = (data)             => API.post('/leaves', data);
+export const getTechLeads   = ()                 => API.get('/leaves/tech-leads');
 export const getMyLeaves   = ()                 => API.get('/leaves/my');
 export const getTeamLeaves = ()                 => API.get('/leaves/team');
 export const getHRLeaves   = ()                 => API.get('/leaves/hr');

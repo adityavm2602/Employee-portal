@@ -85,10 +85,40 @@ const getDashboard = async (req, res) => {
   }
 };
 // ── Helper: create one account ────────────────────────
-const createAccount = async ({ officialEmail, firstName, lastName, dob, employeeId, contactNumber, status, role }) => {
+const createAccount = async ({ officialEmail, firstName, lastName, dob, employeeId, contactNumber, status, role, department, designation, joiningDate }) => {
   const plainPassword = generateRandomPassword();
   const user = await User.create({ email: officialEmail, password: plainPassword, role });
-  await Employee.create({ user: user._id, firstName, lastName, dob, employeeId, officialEmail, contactNumber, status });
+  
+  await Employee.create({
+    user: user._id,
+    firstName,
+    lastName,
+    dob,
+    employeeId,
+    officialEmail,
+    contactNumber,
+    status,
+    department,
+    designation,
+    joiningDate: joiningDate ? new Date(joiningDate) : undefined
+  });
+
+  const EmployeeProfile = require('../models/EmployeeProfile');
+  await EmployeeProfile.create({
+    user: user._id,
+    employeeId,
+    name: `${firstName} ${lastName}`,
+    email: officialEmail,
+    phone: contactNumber,
+    department: department || 'Engineering',
+    designation: designation || 'Software Engineer',
+    joiningDate: joiningDate ? new Date(joiningDate) : new Date(),
+    address: '',
+    skills: [],
+    bio: '',
+    emergencyContact: '',
+    profileImage: ''
+  });
 
   sendWelcomeEmail({ email: officialEmail, firstName, lastName, employeeId, role, plainPassword })
     .catch(err => console.error(`Welcome email failed for ${officialEmail}:`, err.message));
@@ -99,7 +129,7 @@ const createAccount = async ({ officialEmail, firstName, lastName, dob, employee
 // ── POST /api/admin/employees (manual add) ────────────
 const addEmployee = async (req, res) => {
   try {
-    const { first_name, last_name, dob, employee_id, official_email, contact_number, status='probation', role='employee' } = req.body;
+    const { first_name, last_name, dob, employee_id, official_email, contact_number, status='probation', role='employee', department, designation, joining_date } = req.body;
 
     if (!first_name||!last_name||!dob||!employee_id||!official_email||!contact_number)
       return res.status(400).json({ success:false, message:'All fields are required.' });
@@ -115,7 +145,19 @@ const addEmployee = async (req, res) => {
     const empIdExists = await Employee.findOne({ employeeId: employee_id.toUpperCase() });
     if (empIdExists) return res.status(409).json({ success:false, message:'Employee ID already exists.' });
 
-    await createAccount({ officialEmail: official_email.toLowerCase(), firstName: first_name, lastName: last_name, dob: new Date(dob), employeeId: employee_id.toUpperCase(), contactNumber: contact_number, status, role });
+    await createAccount({
+      officialEmail: official_email.toLowerCase(),
+      firstName: first_name,
+      lastName: last_name,
+      dob: new Date(dob),
+      employeeId: employee_id.toUpperCase(),
+      contactNumber: contact_number,
+      status,
+      role,
+      department,
+      designation,
+      joiningDate: joining_date
+    });
 
     return res.status(201).json({ success:true, message:`Account created. Welcome email with login credentials sent to ${official_email}.` });
   } catch(err) {
@@ -244,12 +286,36 @@ const getEmployeeById = async (req, res) => {
 // ── PUT /api/admin/employees/:id ──────────────────────
 const updateEmployee = async (req, res) => {
   try {
-    const { first_name, last_name, dob, contact_number, status } = req.body;
+    const { first_name, last_name, dob, contact_number, status, department, designation, joining_date } = req.body;
     const employee = await Employee.findByIdAndUpdate(req.params.id,
-      { firstName:first_name, lastName:last_name, dob:new Date(dob), contactNumber:contact_number, status },
-      { new:true, runValidators:true }
+      {
+        firstName: first_name,
+        lastName: last_name,
+        dob: new Date(dob),
+        contactNumber: contact_number,
+        status,
+        department,
+        designation,
+        joiningDate: joining_date ? new Date(joining_date) : undefined
+      },
+      { new: true, runValidators: true }
     );
     if (!employee) return res.status(404).json({ success:false, message:'Not found.' });
+
+    // Sync with EmployeeProfile
+    const EmployeeProfile = require('../models/EmployeeProfile');
+    await EmployeeProfile.findOneAndUpdate(
+      { user: employee.user },
+      {
+        name: `${first_name} ${last_name}`,
+        phone: contact_number,
+        department,
+        designation,
+        joiningDate: joining_date ? new Date(joining_date) : undefined
+      },
+      { upsert: true }
+    );
+
     return res.status(200).json({ success:true, message:'Employee updated.', employee });
   } catch(err) { return res.status(500).json({ success:false, message:'Server error.' }); }
 };

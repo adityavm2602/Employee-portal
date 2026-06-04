@@ -109,6 +109,11 @@ const HRLeaves = () => {
                           status={l.techLeadStatus}
                           label={l.techLeadStatus === 'approved' ? '✅ Approved' : l.techLeadStatus === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
                         />
+                        {l.techLeadName && l.techLeadName !== 'N/A' && (
+                          <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded">
+                            TL: {l.techLeadName}
+                          </span>
+                        )}
                         <span className="text-slate-300">→</span>
                         <span className="text-xs text-slate-400 font-medium">Step 2 — HR:</span>
                         <Badge

@@ -11,7 +11,7 @@ const Attendance = () => {
   const [marking, setMarking] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
-  const todayRecord = records.find(r => r.att_date?.split('T')[0] === today);
+  const todayRecord = records.find(r => r.attDate?.split('T')[0] === today);
 
   const fetchAttendance = async () => {
     try {
@@ -107,7 +107,7 @@ const Attendance = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {records.map(r => {
-                  const d = new Date(r.att_date);
+                  const d = new Date(r.attDate);
                   return (
                     <tr key={r.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 text-slate-700">{d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>

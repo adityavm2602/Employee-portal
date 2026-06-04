@@ -123,26 +123,27 @@ const MyLeaves = () => {
                         {/* Reason */}
                         <p className="text-sm text-slate-500 mt-1">{l.reason}</p>
 
-                        {/* Step tracker */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                            ✅ TL: Auto-approved (You)
+                        {/* Reviewer Details Panel */}
+                        <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs max-w-md">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HR Final Review</span>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="font-semibold text-slate-700">
+                              {l.hrStatus === 'pending' ? 'Awaiting HR Review' : 'Status:'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                              ${l.hrStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                                l.hrStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                                'bg-amber-100 text-amber-700'}`}>
+                              {l.hrStatus}
+                            </span>
                           </div>
-                          <span className="text-slate-300 text-xs">→</span>
-                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                            ${l.hrStatus === 'approved' ? 'bg-green-100 text-green-700' :
-                              l.hrStatus === 'rejected' ? 'bg-red-100 text-red-600' :
-                              'bg-amber-100 text-amber-700'}`}>
-                            HR: {l.hrStatus === 'pending' ? 'Pending' : l.hrStatus === 'approved' ? 'Approved' : 'Rejected'}
-                          </div>
+                          {l.hrReviewedByName && (
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Reviewed by: {l.hrReviewedByName}</span>
+                          )}
+                          {l.hrComment && (
+                            <p className="text-slate-500 mt-1.5 italic bg-white p-2 rounded border border-slate-100">"{l.hrComment}"</p>
+                          )}
                         </div>
-
-                        {/* HR comment */}
-                        {l.hrComment && (
-                          <p className="text-xs text-slate-400 mt-2 italic">
-                            HR comment: "{l.hrComment}"
-                          </p>
-                        )}
                       </div>
 
                       <p className="text-xs text-slate-400 whitespace-nowrap">

@@ -109,8 +109,21 @@ return (
                     <tr key={l._id} className="hover:bg-slate-50 transition-colors">
                       {/* Employee Info */}
                       <td className="px-4 py-3">
+ Employee-dashboard
+                        <p className="font-medium text-slate-800">{l.employee?.firstName} {l.employee?.lastName}</p>
+                        <p className="text-xs text-slate-400">{l.employee?.employeeId}</p>
+                        <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
+                          {l.techLeadName && l.techLeadName !== 'N/A' && (
+                            <div>TL: {l.techLeadName}</div>
+                          )}
+                          {l.hrReviewedByName && (
+                            <div>HR: {l.hrReviewedByName}</div>
+                          )}
+                        </div>
+
                         <p className="font-medium text-slate-800">{l.employee?.firstName || 'Unknown'} {l.employee?.lastName || ''}</p>
                         <p className="text-xs text-slate-400">{l.employee?.employeeId || '—'}</p>
+ main
                       </td>
                       
                       {/* Leave Period */}

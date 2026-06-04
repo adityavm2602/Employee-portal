@@ -5,10 +5,13 @@ const { protect }   = require('../middleware/auth');
 const { authorize } = require('../middleware/roleCheck');
 const {
   applyLeave, getMyLeaves, getTeamLeaves,
-  getHRLeaves, getAllLeaves, techLeadReview, hrReview,
+  getHRLeaves, getAllLeaves, techLeadReview, hrReview, getTechLeads
 } = require('../controllers/leaveController');
 
 router.use(protect);
+
+// Get all tech leads (for dropdown when applying leave)
+router.get('/tech-leads', authorize('employee', 'tech_lead', 'admin'), getTechLeads);
 
 // Employee AND TechLead can apply and view their own leaves
 router.post('/',              authorize('employee', 'tech_lead'),        applyLeave);

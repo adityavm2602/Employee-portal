@@ -52,6 +52,20 @@ const employeeSchema = new mongoose.Schema(
       ref: 'Project',
       default: null,
     },
+    department: {
+      type: String,
+      default: 'Engineering',
+      trim: true,
+    },
+    designation: {
+      type: String,
+      default: 'Software Engineer',
+      trim: true,
+    },
+    joiningDate: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
