@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
@@ -16,6 +17,7 @@ import Employees       from './pages/admin/Employees';
 import BulkUpload      from './pages/admin/BulkUpload';
 import AdminAttendance from './pages/admin/Attendance';
 import AdminLeaves     from './pages/admin/Leaves';
+import AdminWorkReports from './pages/admin/WorkReports';
 
 // Tech Lead
 import TechLeadDashboard  from './pages/techlead/Dashboard';
@@ -38,6 +40,9 @@ import Applications       from './pages/employee/Applications';
 import WorkLogs           from './pages/employee/WorkLogs';
 import Attendance         from './pages/employee/Attendance';
 import Leaves             from './pages/employee/Leaves';
+import DailyUpdates       from './pages/employee/DailyUpdates';
+import Profile            from './pages/employee/Profile';
+import Notifications      from './pages/employee/Notifications';
 
 const RootRedirect = () => {
   const { user } = useAuth();
@@ -54,8 +59,9 @@ const RootRedirect = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+      <SocketProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
         <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
@@ -69,6 +75,8 @@ export default function App() {
               <Route path="/admin/bulk-upload" element={<BulkUpload />} />
               <Route path="/admin/attendance"  element={<AdminAttendance />} />
               <Route path="/admin/leaves"      element={<AdminLeaves />} />
+              <Route path="/admin/daily-updates" element={<AdminWorkReports />} />
+              <Route path="/admin/time-tracking" element={<AdminWorkReports />} />
             </Route>
           </Route>
 
@@ -106,10 +114,20 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* ── Change Password — shared by ALL authenticated roles ─ */}
+          {/* ── Shared (Admin & Employee) Daily Updates ──── */}
+          <Route element={<ProtectedRoute allowedRoles={['employee', 'admin']} />}>
+            <Route element={<Layout />}>
+              <Route path="/daily-updates"         element={<DailyUpdates />} />
+              <Route path="/time-tracking"         element={<DailyUpdates />} />
+            </Route>
+          </Route>
+
+          {/* ── Change Password & Profile & Notifications — shared by ALL authenticated roles ─ */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/profile"         element={<Profile />} />
+              <Route path="/notifications"   element={<Notifications />} />
             </Route>
           </Route>
 
@@ -135,7 +153,8 @@ export default function App() {
             </div>
           } />
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }

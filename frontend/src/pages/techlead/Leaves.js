@@ -103,11 +103,17 @@ const TechLeadLeaves = () => {
                               status={l.hrStatus === 'awaiting_tl' ? 'pending' : l.hrStatus}
                               label={l.hrStatus === 'awaiting_tl' ? 'waiting' : l.hrStatus}
                             />
+                            {l.hrReviewedByName && (
+                              <span className="text-xs text-slate-500 font-medium">({l.hrReviewedByName})</span>
+                            )}
                           </>
                         )}
                       </div>
                       {l.techLeadComment && (
                         <p className="text-xs text-slate-400 ml-12 mt-1">Your comment: <em>"{l.techLeadComment}"</em></p>
+                      )}
+                      {l.hrComment && (
+                        <p className="text-xs text-slate-400 ml-12 mt-0.5">HR comment: <em>"{l.hrComment}"</em></p>
                       )}
                     </div>
 

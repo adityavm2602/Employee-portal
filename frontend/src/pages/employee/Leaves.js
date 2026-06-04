@@ -1,7 +1,7 @@
 // src/pages/employee/Leaves.js — Shows 2-step approval status
 import React, { useEffect, useState } from 'react';
-import { applyLeave, getMyLeaves } from '../../services/api';
-import { Card, CardHeader, CardBody, Badge, Button, Input, Textarea, Modal, PageHeader, Spinner, EmptyState } from '../../components/common/UI';
+import { applyLeave, getMyLeaves, getTechLeads } from '../../services/api';
+import { Card, CardHeader, CardBody, Badge, Button, Input, Textarea, Modal, PageHeader, Spinner, EmptyState, Select } from '../../components/common/UI';
 import { CalendarDays, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -14,11 +14,12 @@ const statusLabel = {
 
 const Leaves = () => {
   const [leaves, setLeaves] = useState([]);
+  const [techLeads, setTechLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [form, setForm] = useState({ from_date:'', to_date:'', reason:'' });
+  const [form, setForm] = useState({ from_date:'', to_date:'', reason:'', techLead:'' });
 
   const fetchLeaves = async () => {
     try { const res = await getMyLeaves(); setLeaves(res.data.leaves); }
@@ -26,18 +27,32 @@ const Leaves = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchLeaves(); }, []);
+  const fetchTechLeads = async () => {
+    try {
+      const res = await getTechLeads();
+      setTechLeads(res.data.techLeads || []);
+    } catch {
+      toast.error('Failed to load Tech Leads');
+    }
+  };
+
+  useEffect(() => {
+    fetchLeaves();
+    fetchTechLeads();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (new Date(form.from_date) > new Date(form.to_date))
       return toast.error('From date cannot be after to date');
+    if (!form.techLead)
+      return toast.error('Please select a Tech Lead');
     setSubmitting(true);
     try {
       await applyLeave(form);
       toast.success('Leave submitted! Your Tech Lead and HR have been notified.');
       setShowModal(false);
-      setForm({ from_date:'', to_date:'', reason:'' });
+      setForm({ from_date:'', to_date:'', reason:'', techLead:'' });
       fetchLeaves();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit');
@@ -109,31 +124,49 @@ const Leaves = () => {
                         </p>
                         <p className="text-sm text-slate-500 mt-1">{l.reason}</p>
 
-                        {/* 2-step tracker */}
-                        <div className="flex items-center gap-3 mt-3">
-                          <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full
-                            ${l.techLeadStatus === 'approved' ? 'bg-green-100 text-green-700' :
-                              l.techLeadStatus === 'rejected' ? 'bg-red-100 text-red-600' :
-                              'bg-amber-100 text-amber-700'}`}>
-                            TL: {l.techLeadStatus}
+                        {/* Selected Reviewers & Comments Panel */}
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tech Lead Review</span>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className="font-semibold text-slate-700">Assigned: {l.techLeadName}</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                                ${l.techLeadStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                                  l.techLeadStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                                  'bg-amber-100 text-amber-700'}`}>
+                                {l.techLeadStatus}
+                              </span>
+                            </div>
+                            {l.techLeadReviewedByName && (
+                              <span className="text-[10px] text-slate-400 block mt-0.5">Reviewed by: {l.techLeadReviewedByName}</span>
+                            )}
+                            {l.techLeadComment && (
+                              <p className="text-slate-500 mt-1.5 italic bg-white p-2 rounded border border-slate-100">"{l.techLeadComment}"</p>
+                            )}
                           </div>
-                          <span className="text-slate-300 text-xs">→</span>
-                          <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full
-                            ${l.hrStatus === 'approved' ? 'bg-green-100 text-green-700' :
-                              l.hrStatus === 'rejected' ? 'bg-red-100 text-red-600' :
-                              l.hrStatus === 'awaiting_tl' ? 'bg-slate-100 text-slate-500' :
-                              'bg-amber-100 text-amber-700'}`}>
-                            HR: {l.hrStatus === 'awaiting_tl' ? 'Waiting TL' : l.hrStatus}
+
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HR Review</span>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className="font-semibold text-slate-700">
+                                {l.hrStatus === 'awaiting_tl' ? 'Awaiting Tech Lead Approval' : 'Status:'}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                                ${l.hrStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                                  l.hrStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                                  l.hrStatus === 'awaiting_tl' ? 'bg-slate-100 text-slate-400' :
+                                  'bg-amber-100 text-amber-700'}`}>
+                                {l.hrStatus === 'awaiting_tl' ? 'Awaiting TL' : l.hrStatus}
+                              </span>
+                            </div>
+                            {l.hrReviewedByName && (
+                              <span className="text-[10px] text-slate-400 block mt-0.5">Reviewed by: {l.hrReviewedByName}</span>
+                            )}
+                            {l.hrComment && (
+                              <p className="text-slate-500 mt-1.5 italic bg-white p-2 rounded border border-slate-100">"{l.hrComment}"</p>
+                            )}
                           </div>
                         </div>
-
-                        {/* Comments */}
-                        {l.techLeadComment && (
-                          <p className="text-xs text-slate-400 mt-2">TL: <em>"{l.techLeadComment}"</em></p>
-                        )}
-                        {l.hrComment && (
-                          <p className="text-xs text-slate-400 mt-1">HR: <em>"{l.hrComment}"</em></p>
-                        )}
                       </div>
                       <p className="text-xs text-slate-400 whitespace-nowrap">
                         {new Date(l.createdAt).toLocaleDateString()}
@@ -162,6 +195,20 @@ const Leaves = () => {
               📅 <strong>{getDays(form.from_date, form.to_date)} day(s)</strong> — Requires Tech Lead + HR approval
             </div>
           )}
+          <Select
+            label="Select Tech Lead"
+            value={form.techLead}
+            onChange={e => setForm({ ...form, techLead: e.target.value })}
+            required
+          >
+            <option value="">-- Choose a Tech Lead --</option>
+            {techLeads.map(tl => (
+              <option key={tl._id} value={tl._id}>
+                {tl.name} ({tl.email})
+              </option>
+            ))}
+          </Select>
+
           <Textarea label="Reason for Leave" rows={4} placeholder="Please describe your reason..."
             value={form.reason} onChange={e => setForm({...form, reason: e.target.value})} required />
           <div className="flex justify-end gap-3">

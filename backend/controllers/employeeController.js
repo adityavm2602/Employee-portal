@@ -53,4 +53,16 @@ const getMyApplications = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, applyForProject, getMyApplications };
+// ── GET /api/employee/list ───────────────────────────
+const getAllEmployeesList = async (req, res) => {
+  try {
+    const employees = await Employee.find({})
+      .populate('user', 'email role')
+      .sort({ firstName: 1 });
+    return res.status(200).json({ success: true, employees });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+module.exports = { getProfile, applyForProject, getMyApplications, getAllEmployeesList };

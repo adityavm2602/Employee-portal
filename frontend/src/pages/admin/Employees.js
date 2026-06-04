@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 const EMPTY_FORM = {
   first_name: '', last_name: '', dob: '', employee_id: '',
   official_email: '', contact_number: '', status: 'probation', role: 'employee',
+  department: 'Engineering', designation: 'Software Engineer', joining_date: new Date().toISOString().split('T')[0],
 };
 
 const Employees = () => {
@@ -48,6 +49,9 @@ const Employees = () => {
       employee_id: emp.employeeId,
       official_email: emp.officialEmail,
       role: emp.user?.role || 'employee',
+      department: emp.department || 'Engineering',
+      designation: emp.designation || 'Software Engineer',
+      joining_date: emp.joiningDate ? emp.joiningDate.split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setShowModal(true);
   };
@@ -111,7 +115,7 @@ const Employees = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
-                    {['Name', 'Employee ID', 'Email', 'Contact', 'Status', 'Role', 'Project', 'Actions'].map(h => (
+                    {['Name', 'Employee ID', 'Email & Phone', 'Dept & Desig', 'Status', 'Role', 'Project', 'Actions'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -128,8 +132,14 @@ const Employees = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-slate-500">{emp.employeeId}</td>
-                      <td className="px-4 py-3 text-slate-500">{emp.officialEmail}</td>
-                      <td className="px-4 py-3 text-slate-500">{emp.contactNumber}</td>
+                      <td className="px-4 py-3 text-slate-500">
+                        <div>{emp.officialEmail}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">{emp.contactNumber}</div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        <div className="font-medium text-slate-700">{emp.designation || '—'}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">{emp.department || '—'}</div>
+                      </td>
                       <td className="px-4 py-3"><Badge status={emp.status} /></td>
                       <td className="px-4 py-3">
                         <Badge status={emp.user?.role === 'tech_lead' ? 'active' : 'hold'} label={emp.user?.role} />
@@ -183,6 +193,19 @@ const Employees = () => {
             <option value="employee">Employee</option>
             <option value="tech_lead">Tech Lead</option>
           </Select>
+          <Select label="Department" value={form.department}
+            onChange={e => setForm({...form, department: e.target.value})}>
+            <option value="Engineering">Engineering</option>
+            <option value="Design">Design</option>
+            <option value="HR">Human Resources</option>
+            <option value="Marketing">Marketing</option>
+            <option value="QA">Quality Assurance</option>
+            <option value="Operations">Operations</option>
+          </Select>
+          <Input label="Designation" value={form.designation}
+            onChange={e => setForm({...form, designation: e.target.value})} required />
+          <Input label="Joining Date" type="date" value={form.joining_date}
+            onChange={e => setForm({...form, joining_date: e.target.value})} required />
           <div className="col-span-2 flex justify-end gap-3 pt-2">
             <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Cancel</Button>
             <Button type="submit" loading={submitting}>{editEmployee ? 'Update' : 'Add Employee'}</Button>

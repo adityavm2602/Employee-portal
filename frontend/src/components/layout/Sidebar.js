@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import {
   LayoutDashboard, Users, FolderKanban, ClipboardList,
   CalendarDays, LogOut, ChevronLeft, ChevronRight,
   UserCheck, FileUp, Briefcase, CheckSquare, KeyRound,
-  ShieldCheck, UserCog
+  ShieldCheck, UserCog, FileText, Clock, User, Bell
 } from 'lucide-react';
 
 const navConfig = {
@@ -16,7 +17,11 @@ const navConfig = {
     { to: '/admin/bulk-upload',  label: 'Bulk Upload',     icon: FileUp },
     { to: '/admin/attendance',   label: 'Attendance',      icon: UserCheck },
     { to: '/admin/leaves',       label: 'All Leaves',      icon: CalendarDays },
-    { to: '/change-password',    label: 'Change Password', icon: KeyRound, divider: true },
+    { to: '/admin/daily-updates', label: 'Daily Updates',    icon: FileText },
+    { to: '/admin/time-tracking', label: 'Time Tracking & History', icon: Clock },
+    { to: '/profile',            label: 'My Profile',      icon: User, divider: true },
+    { to: '/notifications',      label: 'Notifications',   icon: Bell, badge: true },
+    { to: '/change-password',    label: 'Change Password', icon: KeyRound },
   ],
   tech_lead: [
     { to: '/techlead/dashboard',   label: 'Dashboard',       icon: LayoutDashboard },
@@ -26,13 +31,17 @@ const navConfig = {
     { to: '/techlead/attendance',  label: 'Attendance',      icon: UserCheck },
     { to: '/techlead/leaves',      label: 'Team Leaves',     icon: CalendarDays },
     { to: '/techlead/my-leaves',   label: 'My Leaves',       icon: CalendarDays, divider: true },
+    { to: '/profile',              label: 'My Profile',      icon: User },
+    { to: '/notifications',        label: 'Notifications',   icon: Bell, badge: true },
     { to: '/change-password',      label: 'Change Password', icon: KeyRound },
   ],
   hr: [
     { to: '/hr/dashboard',       label: 'Dashboard',       icon: LayoutDashboard },
     { to: '/hr/leaves',          label: 'Leave Approvals', icon: ShieldCheck },
     { to: '/hr/employees',       label: 'All Employees',   icon: UserCog },
-    { to: '/change-password',    label: 'Change Password', icon: KeyRound, divider: true },
+    { to: '/profile',            label: 'My Profile',      icon: User, divider: true },
+    { to: '/notifications',      label: 'Notifications',   icon: Bell, badge: true },
+    { to: '/change-password',    label: 'Change Password', icon: KeyRound },
   ],
   employee: [
     { to: '/employee/dashboard',    label: 'Dashboard',       icon: LayoutDashboard },
@@ -41,7 +50,11 @@ const navConfig = {
     { to: '/employee/worklogs',     label: 'Work Logs',       icon: ClipboardList },
     { to: '/employee/attendance',   label: 'Attendance',      icon: UserCheck },
     { to: '/employee/leaves',       label: 'Leaves',          icon: CalendarDays },
-    { to: '/change-password',       label: 'Change Password', icon: KeyRound, divider: true },
+    { to: '/daily-updates',         label: 'Daily Updates',    icon: FileText },
+    { to: '/time-tracking',         label: 'Time Tracking & History', icon: Clock },
+    { to: '/profile',               label: 'My Profile',      icon: User, divider: true },
+    { to: '/notifications',         label: 'Notifications',   icon: Bell, badge: true },
+    { to: '/change-password',       label: 'Change Password', icon: KeyRound },
   ],
 };
 
@@ -54,6 +67,7 @@ const roleBadge = {
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const { unreadCount } = useSocket();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -94,19 +108,29 @@ const Sidebar = () => {
 
       {/* Nav */}
       <nav className="flex-1 p-2 mt-2 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ to, label, icon: Icon, divider }) => (
+        {navItems.map(({ to, label, icon: Icon, divider, badge }) => (
           <React.Fragment key={to}>
             {divider && !collapsed && (
               <div className="border-t border-slate-700 my-2" />
             )}
             <NavLink to={to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative
                  ${isActive ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`
               }
             >
-              <Icon size={18} className="shrink-0" />
-              {!collapsed && <span>{label}</span>}
+              <div className="relative shrink-0 flex items-center justify-center">
+                <Icon size={18} />
+                {collapsed && badge && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-900 animate-pulse"></span>
+                )}
+              </div>
+              {!collapsed && <span className="flex-1">{label}</span>}
+              {!collapsed && badge && unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                  {unreadCount}
+                </span>
+              )}
             </NavLink>
           </React.Fragment>
         ))}

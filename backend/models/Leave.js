@@ -12,6 +12,13 @@ const leaveSchema = new mongoose.Schema(
     toDate:   { type: Date, required: [true, 'To date is required'] },
     reason:   { type: String, required: [true, 'Reason is required'] },
 
+    // The selected Tech Lead for review (only for regular employees)
+    techLead: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
     // ── Step 1: Tech Lead review ──────────────────────────
     techLeadStatus: {
       type: String,

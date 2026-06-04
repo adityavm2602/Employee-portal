@@ -26,6 +26,11 @@ const login = async (req, res) => {
       profile = await Employee.findOne({ user: user._id })
         .select('firstName lastName employeeId officialEmail status currentProject')
         .populate('currentProject', 'title');
+      
+      if (profile) {
+        const { recordEmployeeContact } = require('../utils/worklogHelper');
+        await recordEmployeeContact(profile);
+      }
     }
 
     const token = generateToken({ id: user._id, email: user.email, role: user.role });
@@ -52,6 +57,11 @@ const getMe = async (req, res) => {
     if (user.role !== 'admin') {
       profile = await Employee.findOne({ user: user._id })
         .populate('currentProject', 'title');
+      
+      if (profile) {
+        const { recordEmployeeContact } = require('../utils/worklogHelper');
+        await recordEmployeeContact(profile);
+      }
     }
 
     return res.status(200).json({ success: true, user: { ...user.toJSON(), profile } });

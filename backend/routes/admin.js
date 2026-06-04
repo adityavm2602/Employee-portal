@@ -8,6 +8,7 @@ const {
   getDashboard, addEmployee, bulkUploadEmployees,
   getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee,
 } = require('../controllers/adminController');
+const { getAdminWorklogAnalytics } = require('../controllers/dailyWorkLogController');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -27,5 +28,6 @@ router.post('/employees/bulk-upload', upload.single('file'), bulkUploadEmployees
 router.get('/employees/:id',                   getEmployeeById);
 router.put('/employees/:id',                   updateEmployee);
 router.delete('/employees/:id',                deleteEmployee);
+router.get('/worklog/analytics',               getAdminWorklogAnalytics);
 
 module.exports = router;
