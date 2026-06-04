@@ -13,10 +13,13 @@ const navConfig = {
   admin: [
     { to: '/admin/dashboard',    label: 'Dashboard',       icon: LayoutDashboard },
     { to: '/admin/employees',    label: 'Employees',       icon: Users },
+    {to: "/admin/techleadupdates",label: "TechLeadUpdates",icon: FolderKanban,},
+    {to: "/admin/worklogs",label: "Work Logs",icon: ClipboardList,},
     { to: '/admin/bulk-upload',  label: 'Bulk Upload',     icon: FileUp },
     { to: '/admin/attendance',   label: 'Attendance',      icon: UserCheck },
     { to: '/admin/leaves',       label: 'All Leaves',      icon: CalendarDays },
     { to: '/change-password',    label: 'Change Password', icon: KeyRound, divider: true },
+
   ],
   tech_lead: [
     { to: '/techlead/dashboard',   label: 'Dashboard',       icon: LayoutDashboard },

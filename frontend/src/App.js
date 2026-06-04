@@ -1,4 +1,34 @@
+ admin-feature
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import Layout from './components/layout/Layout';
+
+// Auth
+import Login from './pages/auth/Login';
+import ChangePassword from './pages/auth/ChangePassword';
+
+// Admin
+import AdminDashboard from './pages/admin/Dashboard';
+import Employees from './pages/admin/Employees';
+import BulkUpload from './pages/admin/BulkUpload';
+import AdminAttendance from './pages/admin/Attendance';
+import AdminLeaves from './pages/admin/Leaves';
+import TechLeadUpdates from './pages/admin/TechLeadUpdates';
+import AdminWorkLogs from './pages/admin/WorkLogs';
+
+// Tech Lead
+import TechLeadDashboard from './pages/techlead/Dashboard';
+import Projects from './pages/techlead/Projects';
+import Team from './pages/techlead/Team';
+import TechLeadWorkLogs from './pages/techlead/WorkLogs';
+import TechLeadAttendance from './pages/techlead/Attendance';
+import TechLeadLeaves from './pages/techlead/Leaves';
+import MyLeaves from './pages/techlead/MyLeaves';
 import React from "react";
+ main
 
 import {
   BrowserRouter,
@@ -162,7 +192,19 @@ export default function App() {
                 path="/admin/leaves"
                 element={<AdminLeaves />}
               />
+ admin-feature
+              <Route
+                path="/admin/TechLeadUpdates"
+                element={<TechLeadUpdates />}
+              />
 
+              <Route
+                path="/admin/worklogs"
+                element={<AdminWorkLogs />}
+              />
+                  
+
+         main
             </Route>
           </Route>
 

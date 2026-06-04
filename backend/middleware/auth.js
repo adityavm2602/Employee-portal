@@ -1,8 +1,13 @@
+ admin-feature
+//middleware auth.js
+const jwt = require('jsonwebtoken');
+
 const jwt = require("jsonwebtoken");
 
 // =======================================
 // PROTECT ROUTES
 // =======================================
+ main
 
 const protect = (req, res, next) => {
   try {

@@ -1,8 +1,10 @@
-// controllers/adminController.js
+//  controllers/adminController.js
 const User     = require('../models/User');
 const Employee = require('../models/Employee');
 const Project  = require('../models/Project');
 const Attendance = require('../models/Attendance');
+const mongoose = require('mongoose');
+
 const { parseEmployeeExcel }   = require('../utils/excelParser');
 const { generateRandomPassword } = require('../utils/passwordGenerator');
 const { sendWelcomeEmail }     = require('../services/emailService');
@@ -14,29 +16,80 @@ const getDashboard = async (req, res) => {
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
     const month = today.getMonth()+1, day = today.getDate();
 
-    const [totalEmployees, activeProjects, presentToday, absentToday, todayBirthdays] = await Promise.all([
+    //Safety Check
+    const Task = mongoose.models.Task ? mongoose.model('Task') : null;
+    const Leave = mongoose.models.Leave ? mongoose.model('Leave') : null;
+
+    const [
+      totalEmployees, 
+      activeProjects, 
+      presentToday, 
+      absentToday, 
+      todayBirthdays, 
+      pendingTasksCount,
+      pendingLeavesCount,
+      approvedLeavesTodayCount
+    ] = await Promise.all([
       Employee.countDocuments(),
       Project.countDocuments({ isActive: true }),
-      Attendance.countDocuments({ attDate:{$gte:today,$lt:tomorrow}, status:'present' }),
-      Attendance.countDocuments({ attDate:{$gte:today,$lt:tomorrow}, status:'absent' }),
-      Employee.find({ $expr: { $and: [{ $eq:[{$month:'$dob'},month] }, { $eq:[{$dayOfMonth:'$dob'},day] }] } })
+      
+      // Attendance count
+      Attendance.countDocuments({ attDate: { $gte: today, $lt: tomorrow }, status: 'present' }),
+      Attendance.countDocuments({ attDate: { $gte: today, $lt: tomorrow }, status: 'absent' }),
+      
+      // Birthaday list
+      Employee.find({ $expr: { $and: [{ $eq: [{ $month: '$dob' }, month] }, { $eq: [{ $dayOfMonth: '$dob' }, day] }] } })
         .select('firstName lastName employeeId'),
+      
+      // Productivity Overview 
+      Task ? Task.countDocuments({ status: { $in: ['pending', 'in-progress'] } }) : 0,
+
+      // १. Pending Leave Requests - Admin/TL Action Required)
+      Leave ? Leave.countDocuments({ status: { $in: ['pending', 'tl_approved'] } }) : 0,
+
+      // २. Employees on Leave - Approved Status for Today
+      Leave ? Leave.countDocuments({
+        status: 'approved',
+        startDate: { $lte: tomorrow }, 
+        endDate: { $gte: today }       
+      }) : 0
     ]);
 
-    return res.status(200).json({ success:true, dashboard:{ totalEmployees, activeProjects, attendance:{present:presentToday,absent:absentToday}, todayBirthdays } });
+    // Productivity Calculation: 
+    const productivityRate = totalEmployees > 0 
+      ? Math.round((presentToday / totalEmployees) * 100) 
+      : 0;
+
+    
+    return res.status(200).json({ 
+      success: true, 
+      dashboard: { 
+        totalEmployees, 
+        activeProjects, 
+        attendance: { 
+          present: presentToday, 
+          absent: absentToday 
+        }, 
+        todayBirthdays,
+        pendingLeaves: pendingLeavesCount,       
+        employeesOnLeave: approvedLeavesTodayCount, 
+        productivity: {
+          rate: productivityRate, 
+          pendingTasks: pendingTasksCount
+        }
+      } 
+    });
   } catch(err) {
-    console.error('getDashboard error:',err);
-    return res.status(500).json({ success:false, message:'Server error.' });
+    console.error('getDashboard error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
-
 // ── Helper: create one account ────────────────────────
 const createAccount = async ({ officialEmail, firstName, lastName, dob, employeeId, contactNumber, status, role }) => {
   const plainPassword = generateRandomPassword();
   const user = await User.create({ email: officialEmail, password: plainPassword, role });
   await Employee.create({ user: user._id, firstName, lastName, dob, employeeId, officialEmail, contactNumber, status });
 
-  // Send welcome email with plain password
   sendWelcomeEmail({ email: officialEmail, firstName, lastName, employeeId, role, plainPassword })
     .catch(err => console.error(`Welcome email failed for ${officialEmail}:`, err.message));
 
@@ -82,7 +135,6 @@ const bulkUploadEmployees = async (req, res) => {
 
     for (const emp of valid) {
       try {
-        // HR uniqueness check
         if (emp.role === 'hr') {
           const existingHR = await User.findOne({ role:'hr' });
           if (existingHR) { failedRows.push({ data:emp, errors:['HR account already exists. Only one HR allowed.'] }); continue; }
@@ -116,17 +168,76 @@ const bulkUploadEmployees = async (req, res) => {
 // ── GET /api/admin/employees ──────────────────────────
 const getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find().populate('user','email role').populate('currentProject','title').sort({ createdAt:-1 });
-    return res.status(200).json({ success:true, employees });
-  } catch(err) { return res.status(500).json({ success:false, message:'Server error.' }); }
+    const { search, department, projectId } = req.query;
+    let query = {};
+
+    if (department) query.department = department;
+    if (projectId) query.currentProject = projectId;
+
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { employeeId: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const employees = await Employee.find(query)
+      .populate('user', 'email role')
+      .populate('currentProject', 'title')
+      .populate({
+        path: 'assignedProjects',
+        select: 'title description',
+        options: { strictPopulate: false }
+      })
+      .sort({ createdAt: -1 });
+
+    let updatedEmployees = [];
+    if (mongoose.models.Task) {
+      const Task = mongoose.model('Task');
+      updatedEmployees = await Promise.all(employees.map(async (emp) => {
+        const currentTask = await Task.findOne({ 
+          assignedTo: emp.user?._id, 
+          status: { $in: ['in-progress', 'active', 'Ongoing'] } 
+        }).select('title status description');
+        return { ...emp.toObject(), currentTask };
+      }));
+    } else {
+      updatedEmployees = employees;
+    }
+
+    return res.status(200).json({ success: true, employees: updatedEmployees });
+  } catch (err) { 
+    console.error('getAllEmployees error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' }); 
+  }
 };
 
 // ── GET /api/admin/employees/:id ──────────────────────
 const getEmployeeById = async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id).populate('user','email role').populate('currentProject','title');
+    const employee = await Employee.findById(req.params.id)
+      .populate('user', 'email role')
+      .populate('currentProject', 'title')
+      .populate({
+        path: 'assignedProjects',
+        select: 'title description',
+        options: { strictPopulate: false }
+      });
+      
     if (!employee) return res.status(404).json({ success:false, message:'Employee not found.' });
-    return res.status(200).json({ success:true, employee });
+    
+    let empObj = employee.toObject();
+    if (mongoose.models.Task) {
+      const Task = mongoose.model('Task');
+      const currentTask = await Task.findOne({ 
+        assignedTo: employee.user?._id, 
+        status: { $in: ['in-progress', 'active', 'Ongoing'] } 
+      });
+      empObj.currentTask = currentTask;
+    }
+
+    return res.status(200).json({ success:true, employee: empObj });
   } catch(err) { return res.status(500).json({ success:false, message:'Server error.' }); }
 };
 
@@ -154,4 +265,97 @@ const deleteEmployee = async (req, res) => {
   } catch(err) { return res.status(500).json({ success:false, message:'Server error.' }); }
 };
 
-module.exports = { getDashboard, addEmployee, bulkUploadEmployees, getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee };
+// ── GET /api/admin/work-logs ──────────────────────────
+const getAdminWorkLogs = async (req, res) => {
+  try {
+    const WorkLog = mongoose.model('WorkLog'); 
+    const logs = await WorkLog.find()
+      .populate({ path: 'employee', select: 'firstName lastName employeeId' })
+      .sort({ date: -1 });
+    return res.status(200).json({ success: true, logs });
+  } catch (err) { return res.status(500).json({ success: false, message: 'Server error.' }); }
+};
+
+// ── GET /api/admin/attendance ─────────────────────────
+const getAdminAttendance = async (req, res) => {
+  try {
+    const attendanceRecords = await Attendance.find()
+      .populate({ path: 'employee', select: 'firstName lastName employeeId officialEmail' })
+      .sort({ attDate: -1 });
+    return res.status(200).json({ success: true, attendance: attendanceRecords });
+  } catch (err) { return res.status(500).json({ success: false, message: 'Server error.' }); }
+};
+
+// ── 2-STEP LEAVE APPROVAL BACKEND APIs ────────────────
+
+// 1. Fetch all leaves for admin
+const getAdminLeaves = async (req, res) => {
+  try {
+    const Leave = mongoose.model('Leave');
+    const leaves = await Leave.find()
+      .populate({ path: 'employee', select: 'firstName lastName employeeId' })
+      .sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, leaves });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// 2. Action API: Update 2-Step Status (Approve / Reject)
+const updateLeaveStatus = async (req, res) => {
+  try {
+    const { status } = req.body; 
+    const Leave = mongoose.model('Leave');
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status.' });
+    }
+
+    const leave = await Leave.findByIdAndUpdate(
+      req.params.id,
+      { hrStatus: status, status: status },
+      { new: true }
+    );
+
+    if (!leave) return res.status(404).json({ success: false, message: 'Leave record not found.' });
+
+    return res.status(200).json({ success: true, message: `Leave request ${status} successfully.`, leave });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// ── GET /api/admin/tech-lead-updates (NEW: Fetch Tech Lead Only Activities) ──
+const getTechLeadUpdates = async (req, res) => {
+  try {
+    const WorkLog = mongoose.model('WorkLog'); 
+    
+    // १.  'tech_lead' 
+    const Employee = mongoose.model('Employee');
+    const techLeads = await Employee.find().populate({
+      path: 'user',
+      match: { role: 'tech_lead' } 
+    });
+
+    // २.  IDs filter
+    const techLeadIds = techLeads.filter(emp => emp.user).map(emp => emp._id);
+
+    // ३. worklogs
+    const logs = await WorkLog.find({ employee: { $in: techLeadIds } })
+      .populate('employee', 'firstName lastName employeeId')
+      .sort({ date: -1 });
+
+    return res.status(200).json({ success: true, logs });
+  } catch (err) {
+    console.error('getTechLeadUpdates error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+module.exports = { 
+  getDashboard, addEmployee, bulkUploadEmployees, getAllEmployees, 
+  getEmployeeById, updateEmployee, deleteEmployee, getAdminWorkLogs, 
+  getAdminAttendance, getAdminLeaves, updateLeaveStatus, getTechLeadUpdates
+};
