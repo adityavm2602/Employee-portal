@@ -1,3 +1,4 @@
+ Employee-dashboard
 // models/DailyUpdate.js — Schema for Daily Mandatory Updates
 const mongoose = require('mongoose');
 
@@ -67,3 +68,24 @@ const dailyUpdateSchema = new mongoose.Schema(
 dailyUpdateSchema.index({ employee: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('DailyUpdate', dailyUpdateSchema);
+
+const mongoose = require("mongoose");
+
+const dailyUpdateSchema = new mongoose.Schema({
+  employee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+
+  updateText: String,
+
+  comments: String,
+
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+module.exports = mongoose.model("DailyUpdate", dailyUpdateSchema);
+ main

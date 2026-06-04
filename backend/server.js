@@ -1,11 +1,15 @@
-// server.js — Express + Mongoose entry point
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+
 const connectDB = require("./config/db");
 
-// Route imports
+// =======================================
+// ROUTES
+// =======================================
+
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const projectRoutes = require("./routes/projects");
@@ -18,14 +22,23 @@ const worklogSingularRoutes = require("./routes/worklog");
 const profileRoutes = require("./routes/profile");
 const notificationRoutes = require("./routes/notifications");
 
-// Cron
+// NEW TECH LEAD ROUTES
+const techLeadRoutes = require("./routes/techLeadRoutes");
+
+// =======================================
+// CRON
+// =======================================
+
 const { startBirthdayCron } = require("./cron/birthdayCron");
 
-// Connect to MongoDB
+// =======================================
+// CONNECT DATABASE
+// =======================================
+
 connectDB();
 
 const app = express();
-
+ Employee-dashboard
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -67,55 +80,125 @@ io.on("connection", (socket) => {
 app.use(
   cors({
     origin: allowedOrigins,
-    credentials: true,
-  }),
-);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ── Routes ────────────────────────────────────────────
+// =======================================
+// MIDDLEWARE
+// =======================================
+
+app.use(
+  cors({
+    origin:
+      process.env.CLIENT_URL ||
+      "http://localhost:3000",
+
+ main
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+// Static uploads
+app.use(
+  "/uploads",
+  express.static(
+    path.join(__dirname, "uploads")
+  )
+);
+
+// =======================================
+// API ROUTES
+// =======================================
+
 app.use("/api/auth", authRoutes);
+
 app.use("/api/admin", adminRoutes);
+
 app.use("/api/projects", projectRoutes);
+
 app.use("/api/employee", employeeRoutes);
+
 app.use("/api/worklogs", worklogRoutes);
+
 app.use("/api/attendance", attendanceRoutes);
+
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/daily-updates", dailyUpdateRoutes);
 app.use("/api/worklog", worklogSingularRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// Health check
-app.get("/api/health", (req, res) =>
+// =======================================
+// TECH LEAD ROUTES
+// =======================================
+
+app.use("/api/techlead", techLeadRoutes);
+
+// =======================================
+// HEALTH CHECK
+// =======================================
+
+app.get("/api/health", (req, res) => {
   res.json({
+    success: true,
     status: "ok",
     db: "mongodb",
     timestamp: new Date().toISOString(),
-  }),
-);
-
-// 404
-app.use((req, res) =>
-  res
-    .status(404)
-    .json({ success: false, message: `Route ${req.originalUrl} not found.` }),
-);
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err.message);
-  res
-    .status(err.status || 500)
-    .json({ success: false, message: err.message || "Internal server error." });
+  });
 });
 
-// ── Start ─────────────────────────────────────────────
+// =======================================
+// 404 HANDLER
+// =======================================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found.`,
+  });
+});
+
+// =======================================
+// GLOBAL ERROR HANDLER
+// =======================================
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+
+  res.status(err.status || 500).json({
+    success: false,
+    message:
+      err.message || "Internal server error.",
+  });
+});
+
+// =======================================
+// START SERVER
+// =======================================
+
 const PORT = process.env.PORT || 5000;
+ Employee-dashboard
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   startBirthdayCron();
 });
 
 module.exports = server;
+
+
+app.listen(PORT, () => {
+  console.log(
+    `Server running on http://localhost:${PORT}`
+  );
+
+  startBirthdayCron();
+});
+
+module.exports = app;
+ main

@@ -14,14 +14,21 @@ const navConfig = {
   admin: [
     { to: '/admin/dashboard',    label: 'Dashboard',       icon: LayoutDashboard },
     { to: '/admin/employees',    label: 'Employees',       icon: Users },
+    {to: "/admin/techleadupdates",label: "TechLeadUpdates",icon: FolderKanban,},
+    {to: "/admin/worklogs",label: "Work Logs",icon: ClipboardList,},
     { to: '/admin/bulk-upload',  label: 'Bulk Upload',     icon: FileUp },
     { to: '/admin/attendance',   label: 'Attendance',      icon: UserCheck },
     { to: '/admin/leaves',       label: 'All Leaves',      icon: CalendarDays },
+ Employee-dashboard
     { to: '/admin/daily-updates', label: 'Daily Updates',    icon: FileText },
     { to: '/admin/time-tracking', label: 'Time Tracking & History', icon: Clock },
     { to: '/profile',            label: 'My Profile',      icon: User, divider: true },
     { to: '/notifications',      label: 'Notifications',   icon: Bell, badge: true },
     { to: '/change-password',    label: 'Change Password', icon: KeyRound },
+
+    { to: '/change-password',    label: 'Change Password', icon: KeyRound, divider: true },
+
+ main
   ],
   tech_lead: [
     { to: '/techlead/dashboard',   label: 'Dashboard',       icon: LayoutDashboard },
